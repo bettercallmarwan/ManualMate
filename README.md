@@ -70,7 +70,7 @@ ManualMate/
 - **Redis**
 
 ### API Keys
-- **Hugging Face API Token** - For Embeddings service
+- **Hugging Face API Token** - For Vector embeddings service
 - **Google Gemini API Key** - For LLM service
 
 ---
