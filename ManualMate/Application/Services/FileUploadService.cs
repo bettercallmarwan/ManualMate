@@ -1,0 +1,69 @@
+using ManualMate.API.Controllers.Responses;
+using ManualMate.Infrastructure.Repositories;
+
+namespace ManualMate.Application.Services
+{
+    public class FileUploadService(ProductRepository productRepository)
+    {
+        public async Task<Result<string>> UploadProductManualAsync(int productId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Result<string>.Fail("File Is Empty or Null");
+            }
+
+            var productExists = await productRepository.ProductExists(productId);
+            if (!productExists)
+            {
+                return Result<string>.Fail($"Product with id : {productId} not found");
+            }
+
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if(fileExtension != ".pdf")
+            {
+                return Result<string>.Fail($"File type {fileExtension} is not allowed");
+            }
+
+            var fileName = $"{productId}_{Guid.NewGuid()}{fileExtension}";
+            var manualsPath = Path.Combine("wwwroot", "Manuals");
+            
+            if (!Directory.Exists(manualsPath))
+                Directory.CreateDirectory(manualsPath);
+
+            var filePath = Path.Combine(manualsPath, fileName);
+
+            try
+            {
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var product = await productRepository.GetAsync(productId);
+                if (product == null)
+                {
+                    return Result<string>.Fail($"Product with id : {productId} not found");
+                }
+
+                if (!string.IsNullOrEmpty(product.ManualPath) && File.Exists(product.ManualPath))
+                {
+                    File.Delete(product.ManualPath);
+                }
+
+                product.ManualPath = $"wwwroot/Manuals/{fileName}";
+                product.LastUpdated = DateTime.UtcNow;
+
+                await productRepository.SaveChangesAsync();
+                return Result<string>.Ok(product.ManualPath);
+            }
+            catch (Exception ex)
+            {
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+                return Result<string>.Fail($"Failed to upload manual: {ex.Message}");
+            }
+        }
+    }
+}
