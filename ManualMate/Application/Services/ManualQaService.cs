@@ -27,7 +27,9 @@ namespace ManualMate.Application.Services
                 return Result<string>.Fail($"Product with id {productId} is not found");
             }
 
-            string cacheKey = $"question:{productId}:{question.ToLower()}";
+            string normalizedQuestion = string.Concat(question.Where(c => !char.IsWhiteSpace(c))).ToLower();
+            string cacheKey = $"question:{productId}:{normalizedQuestion}";
+
             var cachedQuestion = await cache.GetAsync<QuestionCache>(cacheKey);
             if(cachedQuestion is not null)
             {
@@ -35,18 +37,22 @@ namespace ManualMate.Application.Services
             }
 
             var questionEmbedding = await embeddingService.GetEmbeddingAsync(question);
+            if (!questionEmbedding.Success)
+            {
+                return Result<string>.Fail(questionEmbedding.Error, questionEmbedding.StatusCode);
+            }
 
             var allEmbeddings = await GetManualEmbeddingsAsync(productId);
-            if (!allEmbeddings.Any())
+            if (!allEmbeddings.Value.Any())
             {
                 return Result<string>.Ok("No information about this product");
             }
 
-            var similarities = allEmbeddings.Select(e =>
+            var similarities = allEmbeddings.Value.Select(e =>
             {
                 var embedding = JsonSerializer.Deserialize<double[]>(e.EmbeddingJson);
-                var similarity = embeddingService.CosineSimilarity(questionEmbedding, embedding);
-                return new { Embedding = e, Similarity = similarity };
+                var similarity = embeddingService.CosineSimilarity(questionEmbedding.Value, embedding);
+                return new { Embedding = e, Similarity = similarity.Value };
             })
                 .OrderByDescending(x => x.Similarity).Take(top_k).ToList();
 
@@ -55,7 +61,7 @@ namespace ManualMate.Application.Services
             var answer = await llmService.GenerateAnswerAsync(context, question);
             if (!answer.Success)
             {
-                return Result<string>.Fail(answer.Error);
+                return Result<string>.Fail(answer.Error, answer.StatusCode);
             }
 
             var questionToCache = new QuestionCache
@@ -69,13 +75,13 @@ namespace ManualMate.Application.Services
             return Result<string>.Ok(answer.Value);
         }
 
-        private async Task<IEnumerable<ManualEmbeddingDto>> GetManualEmbeddingsAsync(int productId)
+        private async Task<Result<IEnumerable<ManualEmbeddingDto>>> GetManualEmbeddingsAsync(int productId)
         {
             var embeddings = await dbContext.Set<ManualEmbedding>().Where(e => e.ProductId == productId).ToListAsync();
 
             var embeddingDtos = mapper.Map<List<ManualEmbeddingDto>>(embeddings);
 
-            return embeddingDtos;
+            return Result<IEnumerable<ManualEmbeddingDto>>.Ok(embeddingDtos);
         }
     }
 }

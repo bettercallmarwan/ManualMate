@@ -362,3 +362,10 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /ManualMate/wwwroot/Manuals/LG_Microwave.pdf
+
+
+*.pdf
+logs/
+
+
+appsettings.json

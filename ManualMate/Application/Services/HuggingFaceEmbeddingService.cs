@@ -1,4 +1,6 @@
-﻿using ManualMate.Application.Interfaces;
+﻿using ManualMate.API.Controllers.Responses;
+using ManualMate.Application.Interfaces;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 
@@ -22,7 +24,7 @@ namespace ManualMate.Application.Services
 
             _logger = logger;
         }
-        public async Task<double[]> GetEmbeddingAsync(string text)
+        public async Task<Result<double[]>> GetEmbeddingAsync(string text)
         {
             try
             {
@@ -35,23 +37,31 @@ namespace ManualMate.Application.Services
                 var response = await _httpClient.PostAsync(MODEL_URL, content);
                 response.EnsureSuccessStatusCode();
 
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    return Result<double[]>.Fail("HuggingFace token is wrong", HttpStatusCode.BadRequest);
+                }
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return Result<double[]>.Fail("HuggingFace token is missing", HttpStatusCode.Unauthorized);
+                }
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    return Result<double[]>.Fail("HuggingFace token expired or leaked, Get a new token", HttpStatusCode.Forbidden);
+                }
                 var jsonResponse = await response.Content.ReadAsStringAsync();
                 var embedding = JsonSerializer.Deserialize<double[]>(jsonResponse);
 
-                return embedding!;
+                return Result<double[]>.Ok(embedding!);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogError(ex, "Error getting embedding");
                 throw;
             }
         }
 
-        public double CosineSimilarity(double[] embedding1, double[] embedding2)
+        public Result<double> CosineSimilarity(double[] embedding1, double[] embedding2)
         {
-            if (embedding1.Length != embedding2.Length)
-                throw new ArgumentException("Embeddings must have the same length");
-
             double dotProduct = 0;
             double magnitude1 = 0;
             double magnitude2 = 0;
@@ -64,11 +74,12 @@ namespace ManualMate.Application.Services
             }
 
             if (magnitude1 == 0 || magnitude2 == 0)
-                return 0;
+                return Result<double>.Ok(0);
 
             double similarity = dotProduct / (Math.Sqrt(magnitude1) * Math.Sqrt(magnitude2));
+            double res = Math.Max(-1.0, Math.Min(1.0, similarity));
 
-            return Math.Max(-1.0, Math.Min(1.0, similarity));
+            return Result<double>.Ok(res);
         }
     }
 }

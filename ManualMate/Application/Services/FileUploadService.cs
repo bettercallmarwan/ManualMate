@@ -1,5 +1,6 @@
 using ManualMate.API.Controllers.Responses;
 using ManualMate.Infrastructure.Repositories;
+using System.Net;
 
 namespace ManualMate.Application.Services
 {
@@ -9,19 +10,19 @@ namespace ManualMate.Application.Services
         {
             if (file == null || file.Length == 0)
             {
-                return Result<string>.Fail("File Is Empty or Null");
+                return Result<string>.Fail("File Is Empty or Null", HttpStatusCode.BadRequest);
             }
 
             var productExists = await productRepository.ProductExists(productId);
             if (!productExists)
             {
-                return Result<string>.Fail($"Product with id : {productId} not found");
+                return Result<string>.Fail($"Product with id : {productId} not found", HttpStatusCode.NotFound);
             }
 
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if(fileExtension != ".pdf")
             {
-                return Result<string>.Fail($"File type {fileExtension} is not allowed");
+                return Result<string>.Fail($"File type {fileExtension} is not allowed", HttpStatusCode.BadRequest);
             }
 
             var fileName = $"{productId}_{Guid.NewGuid()}{fileExtension}";
@@ -42,7 +43,7 @@ namespace ManualMate.Application.Services
                 var product = await productRepository.GetAsync(productId);
                 if (product == null)
                 {
-                    return Result<string>.Fail($"Product with id : {productId} not found");
+                    return Result<string>.Fail($"Product with id : {productId} not found", HttpStatusCode.NotFound);
                 }
 
                 if (!string.IsNullOrEmpty(product.ManualPath) && File.Exists(product.ManualPath))
@@ -56,13 +57,13 @@ namespace ManualMate.Application.Services
                 await productRepository.SaveChangesAsync();
                 return Result<string>.Ok(product.ManualPath);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
-                return Result<string>.Fail($"Failed to upload manual: {ex.Message}");
+                throw;
             }
         }
     }

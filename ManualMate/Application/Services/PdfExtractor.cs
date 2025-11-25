@@ -1,21 +1,29 @@
-﻿using System.Text;
+﻿using ManualMate.API.Controllers.Responses;
+using System.Text;
 using UglyToad.PdfPig;
 
 namespace ManualMate.Application.Services
 {
     public static class PdfExtractor
     {
-        public static string ExtractTextFromPdf(string path)
+        public static Result<string> ExtractTextFromPdf(string path)
         {
-            using var document = PdfDocument.Open(path);
-            var text = new StringBuilder();
-
-            foreach(var page in document.GetPages())
+            try
             {
-                text.AppendLine(page.Text);
-            }
+                using var document = PdfDocument.Open(path);
+                var text = new StringBuilder();
 
-            return text.ToString();
+                foreach (var page in document.GetPages())
+                {
+                    text.AppendLine(page.Text);
+                }
+
+                return Result<string>.Ok(text.ToString());
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

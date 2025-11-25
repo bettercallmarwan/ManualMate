@@ -1,5 +1,7 @@
 ﻿using ManualMate.API.Controllers.Responses;
 using ManualMate.Application.Interfaces;
+using Serilog.Core;
+using System.Net;
 using System.Text.Json;
 
 namespace ManualMate.Application.Services
@@ -55,6 +57,19 @@ namespace ManualMate.Application.Services
 
                 var response = await _httpClient.PostAsJsonAsync( $"{MODEL_URL}{_apiToken}", payload);
 
+                if (response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    return Result<string>.Fail("Google Gemini token is wrong", HttpStatusCode.BadRequest);
+                }
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return Result<string>.Fail("Google Gemini token is missing", HttpStatusCode.Unauthorized);
+                }
+                if (response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    return Result<string>.Fail("Google Gemini token expired or leaked, Get a new token", HttpStatusCode.Forbidden);
+                }
+
                 string result = await response.Content.ReadAsStringAsync();
 
                 using var doc = JsonDocument.Parse(result);
@@ -70,7 +85,7 @@ namespace ManualMate.Application.Services
                 }
                 return Result<string>.Ok(output);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

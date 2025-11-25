@@ -4,6 +4,7 @@ using ManualMate.Application.DTOs;
 using ManualMate.Application.Interfaces;
 using ManualMate.Domain.Models;
 using ManualMate.Infrastructure.Repositories;
+using System.Net;
 
 namespace ManualMate.Application.Services
 {
@@ -31,7 +32,7 @@ namespace ManualMate.Application.Services
                 return Result<GetProductDto>.Ok(productToReturn);
             }
 
-            return Result<GetProductDto>.Fail("Product Not Found");
+            return Result<GetProductDto>.Fail("Product Not Found", HttpStatusCode.NotFound);
         }
 
         public async Task<Result<IEnumerable<GetProductDto>>> GetProductsAsync()
@@ -56,7 +57,7 @@ namespace ManualMate.Application.Services
         {
             var product = await repository.GetAsync(id);
             if (product is null)
-                return Result<GetProductDto>.Fail($"product with id {id} not found");
+                return Result<GetProductDto>.Fail($"product with id {id} not found", HttpStatusCode.NotFound);
 
             mapper.Map(dto, product);
 
@@ -75,7 +76,7 @@ namespace ManualMate.Application.Services
         {
             var product = await repository.GetAsync(id);
             if (product is null)
-                return Result<bool>.Fail($"product with id :{id} is not found");
+                return Result<bool>.Fail($"product with id :{id} is not found", HttpStatusCode.NotFound);
 
             repository.Remove(product);
             await repository.SaveChangesAsync();

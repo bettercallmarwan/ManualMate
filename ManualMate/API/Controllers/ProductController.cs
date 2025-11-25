@@ -16,70 +16,56 @@ namespace ManualMate.API.Controllers
         public async Task<IActionResult> GetProduct(int id)
         {
             var result = await productService.GetProductAsync(id);
-            if (!result.Success)
-                return NotFound(new { error = result.Error });
-
-            return Ok(result.Value);
+            return this.GetResponse<GetProductDto>(result);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetProducts()
         {
             var result = await productService.GetProductsAsync();
-            return Ok(result.Value);
+            return this.GetResponse<IEnumerable<GetProductDto>>(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateProduct(CreateProductDto dto)
         {
             var result = await productService.CreateProductAsync(dto);
-            return Ok(result.Value);
+            return this.GetResponse<CreateProductDto>(result);
         }
 
         [HttpPut("{id:int}")]
         public async Task<IActionResult> UpdateProduct(int id, CreateProductDto dto)
         {
             var result = await productService.EditProductAsync(id, dto);
-            if (!result.Success)
-                return NotFound(new { error = result.Error });
-            return Ok(result.Value);
+            return this.GetResponse<GetProductDto>(result);
         }
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await productService.DeleteAsync(id);
-            if (!result.Success)
-                return NotFound(new { error = result.Error });
-            return Ok(result.Value);
+            return this.GetResponse<bool>(result);
         }
 
         [HttpPost("upload-manual/{id:int}")]
         public async Task<IActionResult> UploadManual(int id, IFormFile file)
         {
             var result = await fileUploadService.UploadProductManualAsync(id, file);
-            if (!result.Success)
-                return BadRequest(new { error = result.Error });
-
-            return Ok(result.Value);
+            return this.GetResponse<string>(result);
         }
 
         [HttpGet("process-manual/{id:int}")]
         public async Task<IActionResult> ProcessManual(int id)
         {
             var result = await manualProcessingService.ProcessManualAsync(id);
-
-            if (!result.Success)
-                return NotFound(new { error = result.Error });
-
-            return Ok(result.Value);
+            return this.GetResponse<bool>(result);
         }
 
         [HttpGet("ask/{productId:int}")]
         public async Task<IActionResult> Ask(int productId, string question)
         {
             var result = await manualQaService.GetAnswerAsync(productId, question);
-            return Ok(result.Value);
+            return this.GetResponse<string>(result);
         }
     }
 }

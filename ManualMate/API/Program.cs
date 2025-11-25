@@ -3,8 +3,9 @@ using ManualMate.API.Middlewares;
 using ManualMate.Infrastructure.Presistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Text.Json.Serialization;
-
+using Serilog.Events;
 namespace ManualMate.API
 {
     public class Program
@@ -13,6 +14,12 @@ namespace ManualMate.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Host.UseSerilog((context, configuration) =>
+                configuration
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                .WriteTo.Console()
+                .WriteTo.File("logs/app-.log", rollingInterval: RollingInterval.Day));
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -38,6 +45,8 @@ namespace ManualMate.API
             });
                 
             var app = builder.Build();
+
+            app.UseSerilogRequestLogging();
 
             if (app.Environment.IsDevelopment())
             {
