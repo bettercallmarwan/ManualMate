@@ -6,57 +6,93 @@ using System.Text.Json;
 
 namespace ManualMate.Application.Services
 {
-    public class HuggingFaceEmbeddingService : IEmbeddingService
+    public class HuggingFaceEmbeddingService(IConfiguration configuration) : IEmbeddingService
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiToken;
-        private readonly ILogger<HuggingFaceEmbeddingService> _logger;
-         
-        private const string MODEL_URL = "https://router.huggingface.co/hf-inference/models/BAAI/bge-small-en-v1.5";
-        public HuggingFaceEmbeddingService(ILogger<HuggingFaceEmbeddingService> logger, IConfiguration configuration)
-        {
-            _apiToken = configuration["HuggingFace:ApiToken"]!;
-            if (string.IsNullOrEmpty(_apiToken))
-                throw new Exception("HuggingFace api is not configured");
+        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly string API_TOKEN = configuration["HuggingFace:ApiToken"]!;
+        private readonly string MODEL_URL = configuration["HuggingFace:ModelUrl"]!;
 
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiToken}");
-
-            _logger = logger;
-        }
         public async Task<Result<double[]>> GetEmbeddingAsync(string text)
+        {
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {API_TOKEN}");
+
+            try
+            {
+                var response = await GetHuggingFaceResponse(text);
+
+                string json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if(TryExtractHuggingFaceErrorMessage(json, out var message))
+                    {
+                        return Result<double[]>.Fail(message, response.StatusCode);
+                    }
+
+                    return Result<double[]>.Fail("Error Generating Answer.", response.StatusCode);
+                }
+
+                if(TryExtractHuggingFaceAnswer(json, out var embeddingsResponse))
+                {
+                    return Result<double[]>.Ok(embeddingsResponse!);
+                }
+
+                return Result<double[]>.Fail("Unexpected behaviour from Hugging Face Json response", response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                return Result<double[]>.Fail("Unexpected error: " + ex.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private async Task<HttpResponseMessage> GetHuggingFaceResponse(string text)
+        {
+            var payload = new { inputs = text };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync(MODEL_URL, content);
+
+            return response;
+        }
+
+        private static bool TryExtractHuggingFaceAnswer(string json, out double[]? result)
         {
             try
             {
-                var payload = new { inputs = text };
-                var content = new StringContent(
-                    JsonSerializer.Serialize(payload),
-                    Encoding.UTF8,
-                    "application/json");
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
 
-                var response = await _httpClient.PostAsync(MODEL_URL, content);
-                response.EnsureSuccessStatusCode();
+                var embeddings = JsonSerializer.Deserialize<double[]>(json);
 
-                if (response.StatusCode == HttpStatusCode.BadRequest)
-                {
-                    return Result<double[]>.Fail("HuggingFace token is wrong", HttpStatusCode.BadRequest);
-                }
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    return Result<double[]>.Fail("HuggingFace token is missing", HttpStatusCode.Unauthorized);
-                }
-                if (response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    return Result<double[]>.Fail("HuggingFace token expired or leaked, Get a new token", HttpStatusCode.Forbidden);
-                }
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                var embedding = JsonSerializer.Deserialize<double[]>(jsonResponse);
-
-                return Result<double[]>.Ok(embedding!);
+                result = embeddings!;
+                return true;
             }
-            catch (Exception)
+            catch
             {
-                throw;
+                result = null;
+                return false;
+            }
+        }
+
+        private static bool TryExtractHuggingFaceErrorMessage(string json, out string message)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                message = doc.RootElement
+                    .GetProperty("error")
+                    .GetString()!;
+
+                return true;
+            }
+            catch
+            {
+                message = "";
+                return false;
             }
         }
 

@@ -1,5 +1,4 @@
 using ManualMate.API.Controllers.Responses;
-using ManualMate.API.Middlewares;
 using ManualMate.Infrastructure.Presistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +39,7 @@ namespace ManualMate.API
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage));
 
-                    return new BadRequestObjectResult(Result<object>.Fail("errors"));
+                    return new BadRequestObjectResult(Result<object>.Fail(errors));
                 };
             });
                 
@@ -60,8 +59,6 @@ namespace ManualMate.API
                 context.Database.Migrate();
                 await DbInitializer.seedAsync(context);
             }
-
-            app.UseMiddleware<ExceptionHandlerMiddleware>();
 
             app.UseHttpsRedirection();
 

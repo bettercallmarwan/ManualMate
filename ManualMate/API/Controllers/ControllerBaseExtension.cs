@@ -8,21 +8,19 @@ namespace ManualMate.API.Controllers
     {
         public static IActionResult GetResponse<T>(this ControllerBase controllerBase, Result<T> result)
         {
-            switch (result.StatusCode)
+            if (result.Success)
             {
-                case HttpStatusCode.OK:
-                    return controllerBase.Ok(result.Value);
-                case HttpStatusCode.Unauthorized:
-                    return controllerBase.Unauthorized(new { error = result.Error });
-                case HttpStatusCode.BadRequest:
-                    return controllerBase.BadRequest(new { error = result.Error });
-                case HttpStatusCode.NotFound:
-                    return controllerBase.NotFound(new { error = result.Error });
-                case HttpStatusCode.Forbidden:
-                    return controllerBase.Forbid();
-                default:
-                    return controllerBase.StatusCode(500); ;
+                return controllerBase.StatusCode(
+                    (int)(result.StatusCode ?? HttpStatusCode.OK),
+                    new { data = result.Value }
+                );
             }
+
+            return controllerBase.StatusCode(
+                (int)(result.StatusCode ?? HttpStatusCode.BadRequest),
+                new { error = result.Error }
+            );
         }
+
     }
 }

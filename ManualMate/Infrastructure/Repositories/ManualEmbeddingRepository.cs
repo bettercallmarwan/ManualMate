@@ -1,6 +1,7 @@
 ﻿using ManualMate.Domain.Interfaces;
 using ManualMate.Domain.Models;
 using ManualMate.Infrastructure.Presistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ManualMate.Infrastructure.Repositories
 {
@@ -10,7 +11,12 @@ namespace ManualMate.Infrastructure.Repositories
         {
             await dbContext.Set<ManualEmbedding>().AddAsync(entity);
         }
-
+        public async Task RemoveForProduct(int productId)
+        {
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"DELETE FROM ManualEmbeddings WHERE ProductId = {productId}"
+            );
+        }
         public Task<IEnumerable<ManualEmbedding>> GetAllAsync()
         {
             throw new NotImplementedException();

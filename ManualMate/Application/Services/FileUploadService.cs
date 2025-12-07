@@ -51,7 +51,7 @@ namespace ManualMate.Application.Services
                     File.Delete(product.ManualPath);
                 }
 
-                product.ManualPath = $"wwwroot/Manuals/{fileName}";
+                product.ManualPath = filePath;
                 product.LastUpdated = DateTime.UtcNow;
 
                 await productRepository.SaveChangesAsync();

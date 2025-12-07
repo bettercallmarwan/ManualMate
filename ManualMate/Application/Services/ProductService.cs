@@ -9,6 +9,7 @@ using System.Net;
 namespace ManualMate.Application.Services
 {
     public class ProductService(ProductRepository repository,
+        ManualEmbeddingRepository embeddingRepository,
         IConfiguration configuration, 
         IMapper mapper,
         ICacheService cache)
@@ -79,6 +80,7 @@ namespace ManualMate.Application.Services
                 return Result<bool>.Fail($"product with id :{id} is not found", HttpStatusCode.NotFound);
 
             repository.Remove(product);
+            await embeddingRepository.RemoveForProduct(id);
             await repository.SaveChangesAsync();
 
             string cacheKey = $"product:{id}";

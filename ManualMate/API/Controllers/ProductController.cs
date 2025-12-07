@@ -61,6 +61,9 @@ namespace ManualMate.API.Controllers
             return this.GetResponse<bool>(result);
         }
 
+        [HttpDelete("remove-manual-embeddings")]
+
+
         [HttpGet("ask/{productId:int}")]
         public async Task<IActionResult> Ask(int productId, string question)
         {

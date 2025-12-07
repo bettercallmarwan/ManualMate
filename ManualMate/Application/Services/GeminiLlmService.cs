@@ -1,36 +1,123 @@
 ﻿using ManualMate.API.Controllers.Responses;
 using ManualMate.Application.Interfaces;
-using Serilog.Core;
 using System.Net;
+using System.Text;
 using System.Text.Json;
 
 namespace ManualMate.Application.Services
 {
-    public class GeminiLlmService : ILlmService
+    public class GeminiLlmService(IConfiguration configuration) : ILlmService
     {
-        private readonly HttpClient _httpClient;
-        private readonly string _apiToken;
-        private readonly ILogger<GeminiLlmService> _logger;
-
-        private const string MODEL_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=";
-
-        public GeminiLlmService(ILogger<GeminiLlmService> logger, IConfiguration configuration)
-        {
-            _apiToken = configuration["Gemini:GeminiToken"]!;
-            if (string.IsNullOrEmpty(_apiToken))
-                throw new Exception("can't configure model api token");
-
-            _httpClient = new HttpClient();
-
-            _logger = logger;
-        }
+        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly string API_TOKEN = configuration["Gemini:GeminiToken"]!;
+        private readonly string MODEL_URL = configuration["Gemini:ModelUrl"]!;
 
         public async Task<Result<string>> GenerateAnswerAsync(string context, string question)
         {
             try
             {
-                var prompt = $"""
-                STRICT RAG MODE: Answer ONLY if the information is in the context. Otherwise, reject and Only say this exactly : Cant asnwer this question.
+                var prompt = GeneratePrompt(context, question);
+
+                var response = await GetGeminiResponse(prompt);
+
+                string json = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (TryExtractGeminiErrorMessage(json, out var message))
+                    {
+                        return Result<string>.Fail(message, response.StatusCode);
+                    }
+
+                    return Result<string>.Fail("Error Generating Answer.", response.StatusCode);
+                }
+
+                if (TryExtractGeminiAnswer(json, out string textResponse))
+                {
+                    return Result<string>.Ok(textResponse);
+                }
+
+                return Result<string>.Fail("Unexpected behaviour from Gemini Json response", response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                return Result<string>.Fail("Unexpected error: " + ex.Message, HttpStatusCode.InternalServerError);
+            }
+        }
+
+        private async Task<HttpResponseMessage> GetGeminiResponse(string prompt)
+        {
+            var payload = new
+            {
+                contents = new[]
+                {
+                    new
+                    {
+                        parts = new[]
+                        {
+                            new
+                            {
+                                text = prompt
+                            }
+                        }
+                    }
+                }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync($"{MODEL_URL}{API_TOKEN}", content);
+
+            return response;
+        }
+        private static bool TryExtractGeminiAnswer(string json, out string result)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                var text = root
+                    .GetProperty("candidates")[0]
+                    .GetProperty("content")
+                    .GetProperty("parts")[0]
+                    .GetProperty("text")
+                    .GetString();
+
+                result = text!;
+                return true;
+            }
+            catch
+            {
+                result = "";
+                return false;
+            }
+        }
+        private static bool TryExtractGeminiErrorMessage(string json, out string message)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                message = doc.RootElement
+                    .GetProperty("error")
+                    .GetProperty("message")
+                    .GetString()!;
+
+                return true;
+            }
+            catch
+            {
+                message = "";
+                return false;
+            }
+        }
+        private static string GeneratePrompt(string context, string question)
+        {
+            var prompt = $"""
+                STRICT RAG MODE: Answer ONLY if the information is in the context. Otherwise, reject and Only say this exactly : Can't asnwer this question.
 
                 CONTEXT:
                 {context}
@@ -44,51 +131,7 @@ namespace ManualMate.Application.Services
                 RESPONSE:
                 """;
 
-                var payload = new
-                {
-                    contents = new[]
-                    {
-                        new
-                        {
-                            parts = new[] { new { text = prompt } }
-                        }
-                    }
-                };
-
-                var response = await _httpClient.PostAsJsonAsync( $"{MODEL_URL}{_apiToken}", payload);
-
-                if (response.StatusCode == HttpStatusCode.BadRequest)
-                {
-                    return Result<string>.Fail("Google Gemini token is wrong", HttpStatusCode.BadRequest);
-                }
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    return Result<string>.Fail("Google Gemini token is missing", HttpStatusCode.Unauthorized);
-                }
-                if (response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    return Result<string>.Fail("Google Gemini token expired or leaked, Get a new token", HttpStatusCode.Forbidden);
-                }
-
-                string result = await response.Content.ReadAsStringAsync();
-
-                using var doc = JsonDocument.Parse(result);
-                string output = "";
-                if (doc.RootElement.TryGetProperty("candidates", out var candidates))
-                {
-                    output = candidates[0]
-                        .GetProperty("content")
-                        .GetProperty("parts")[0]
-                        .GetProperty("text")
-                        .GetString()!;
-
-                }
-                return Result<string>.Ok(output);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return prompt;
         }
     }
 }
