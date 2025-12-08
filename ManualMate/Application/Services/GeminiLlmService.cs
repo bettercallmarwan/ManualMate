@@ -6,12 +6,8 @@ using System.Text.Json;
 
 namespace ManualMate.Application.Services
 {
-    public class GeminiLlmService(IConfiguration configuration) : ILlmService
+    public class GeminiLlmService(IHttpClientFactory clientFactory) : ILlmService
     {
-        private readonly HttpClient _httpClient = new HttpClient();
-        private readonly string API_TOKEN = configuration["Gemini:GeminiToken"]!;
-        private readonly string MODEL_URL = configuration["Gemini:ModelUrl"]!;
-
         public async Task<Result<string>> GenerateAnswerAsync(string context, string question)
         {
             try
@@ -69,9 +65,8 @@ namespace ManualMate.Application.Services
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync($"{MODEL_URL}{API_TOKEN}", content);
-
-            return response;
+            var client = clientFactory.CreateClient("GeminiClient");
+            return await client.PostAsync("", content);
         }
         private static bool TryExtractGeminiAnswer(string json, out string result)
         {

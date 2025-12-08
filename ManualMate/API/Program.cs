@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json.Serialization;
 using Serilog.Events;
+using System.Net.Http.Headers;
+
 namespace ManualMate.API
 {
     public class Program
@@ -30,6 +32,24 @@ namespace ManualMate.API
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddServices(builder.Configuration);// extension
+
+            builder.Services.AddHttpClient("GeminiClient", client =>
+            {
+                string MODEL_URL = builder.Configuration["Gemini:ModelUrl"]!;
+                string API_TOKEN = builder.Configuration["Gemini:GeminiToken"]!;
+
+                client.BaseAddress = new Uri($"{MODEL_URL}{API_TOKEN}");
+            });
+
+            builder.Services.AddHttpClient("HuggingFaceClient", client =>
+            {
+                string MODEL_URL = builder.Configuration["HuggingFace:ModelUrl"]!;
+                string API_TOKEN = builder.Configuration["HuggingFace:ApiToken"]!;
+
+                client.BaseAddress = new Uri(MODEL_URL);
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", API_TOKEN);
+            });
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {

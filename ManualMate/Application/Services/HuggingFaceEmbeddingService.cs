@@ -6,16 +6,11 @@ using System.Text.Json;
 
 namespace ManualMate.Application.Services
 {
-    public class HuggingFaceEmbeddingService(IConfiguration configuration) : IEmbeddingService
+    public class HuggingFaceEmbeddingService(IHttpClientFactory clientFactory) : IEmbeddingService
     {
-        private readonly HttpClient _httpClient = new HttpClient();
-        private readonly string API_TOKEN = configuration["HuggingFace:ApiToken"]!;
-        private readonly string MODEL_URL = configuration["HuggingFace:ModelUrl"]!;
 
         public async Task<Result<double[]>> GetEmbeddingAsync(string text)
         {
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {API_TOKEN}");
-
             try
             {
                 var response = await GetHuggingFaceResponse(text);
@@ -54,7 +49,8 @@ namespace ManualMate.Application.Services
                 Encoding.UTF8,
                 "application/json");
 
-            var response = await _httpClient.PostAsync(MODEL_URL, content);
+            var client = clientFactory.CreateClient("HuggingFaceClient");
+            var response = await client.PostAsync("", content);
 
             return response;
         }
