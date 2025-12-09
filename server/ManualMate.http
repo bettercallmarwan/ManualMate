@@ -1,0 +1,6 @@
+@ManualMate_HostAddress = http://localhost:5035
+
+GET {{ManualMate_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
