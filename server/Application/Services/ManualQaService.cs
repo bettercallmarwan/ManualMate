@@ -17,6 +17,7 @@ namespace ManualMate.Application.Services
         ICacheService cache) : IManualQaService
     {
         private static int top_k = 7;
+        private static string context_seperator = "\n\n---\n\n";
         private TimeSpan ttl = TimeSpan.FromHours(double.Parse(configuration.GetSection("RedisSettings")["TimeToLiveInHours"]!));
 
         public async Task<Result<string>> GetAnswerAsync(int productId, string question)
@@ -53,10 +54,9 @@ namespace ManualMate.Application.Services
                 var embedding = JsonSerializer.Deserialize<double[]>(e.EmbeddingJson);
                 var similarity = embeddingService.CosineSimilarity(questionEmbedding.Value, embedding);
                 return new { Embedding = e, Similarity = similarity.Value };
-            })
-                .OrderByDescending(x => x.Similarity).Take(top_k).ToList();
+            }).OrderByDescending(x => x.Similarity).Take(top_k).ToList();
 
-            var context = string.Join("\n\n---\n\n", similarities.Select(s => s.Embedding.TextChunk));
+            var context = string.Join(context_seperator, similarities.Select(s => s.Embedding.TextChunk));
 
             var answer = await llmService.GenerateAnswerAsync(context, question);
             if (!answer.Success)
