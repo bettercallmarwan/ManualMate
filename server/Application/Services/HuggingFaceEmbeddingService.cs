@@ -8,8 +8,7 @@ namespace ManualMate.Application.Services
 {
     public class HuggingFaceEmbeddingService(IHttpClientFactory clientFactory) : IEmbeddingService
     {
-
-        public async Task<Result<double[]>> GetEmbeddingAsync(string text)
+        public async Task<Result<Pgvector.Vector>> GetEmbeddingAsync(string text)
         {
             try
             {
@@ -21,22 +20,22 @@ namespace ManualMate.Application.Services
                 {
                     if(TryExtractHuggingFaceErrorMessage(json, out var message))
                     {
-                        return Result<double[]>.Fail(message, response.StatusCode);
+                        return Result<Pgvector.Vector>.Fail(message, response.StatusCode);
                     }
 
-                    return Result<double[]>.Fail("Error Generating Answer.", response.StatusCode);
+                    return Result<Pgvector.Vector>.Fail("Error Generating Answer.", response.StatusCode);
                 }
 
                 if(TryExtractHuggingFaceAnswer(json, out var embeddingsResponse))
                 {
-                    return Result<double[]>.Ok(embeddingsResponse!);
+                    return Result<Pgvector.Vector>.Ok(embeddingsResponse);
                 }
 
-                return Result<double[]>.Fail("Unexpected behaviour from Hugging Face Json response", response.StatusCode);
+                return Result<Pgvector.Vector>.Fail("Unexpected behaviour from Hugging Face Json response", response.StatusCode);
             }
             catch (Exception ex)
             {
-                return Result<double[]>.Fail("Unexpected error: " + ex.Message, HttpStatusCode.InternalServerError);
+                return Result<Pgvector.Vector>.Fail("Unexpected error: " + ex.Message, HttpStatusCode.InternalServerError);
             }
         }
 
@@ -55,20 +54,24 @@ namespace ManualMate.Application.Services
             return response;
         }
 
-        private static bool TryExtractHuggingFaceAnswer(string json, out double[]? result)
+        private static bool TryExtractHuggingFaceAnswer(string json, out Pgvector.Vector? result)
         {
             try
             {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
+                var floatArray = JsonSerializer.Deserialize<float[]>(json);
 
-                var embeddings = JsonSerializer.Deserialize<double[]>(json);
+                if (floatArray == null || floatArray.Length == 0)
+                {
+                    result = null;
+                    return false;
+                }
 
-                result = embeddings!;
+                result = new Pgvector.Vector(floatArray);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Vector extraction failed: {ex.Message}");
                 result = null;
                 return false;
             }
@@ -92,23 +95,23 @@ namespace ManualMate.Application.Services
             }
         }
 
-        public Result<double> CosineSimilarity(double[] embedding1, double[] embedding2)
+        public Result<float> CosineSimilarity(float[] embedding1, float[] embedding2)
         {
             if (embedding1 == null)
-                return Result<double>.Fail("embedding1 cannot be null", HttpStatusCode.BadRequest);
+                return Result<float>.Fail("embedding1 cannot be null", HttpStatusCode.BadRequest);
             
             if (embedding2 == null)
-                return Result<double>.Fail("embedding2 cannot be null", HttpStatusCode.BadRequest);
+                return Result<float>.Fail("embedding2 cannot be null", HttpStatusCode.BadRequest);
 
             if (embedding1.Length != embedding2.Length)
-                return Result<double>.Fail($"Embeddings must have the same length. embedding1: {embedding1.Length}, embedding2: {embedding2.Length}", HttpStatusCode.BadRequest);
+                return Result<float>.Fail($"Embeddings must have the same length. embedding1: {embedding1.Length}, embedding2: {embedding2.Length}", HttpStatusCode.BadRequest);
 
             if (embedding1.Length == 0)
-                return Result<double>.Fail("Embeddings cannot be empty", HttpStatusCode.BadRequest);
+                return Result<float>.Fail("Embeddings cannot be empty", HttpStatusCode.BadRequest);
 
-            double dotProduct = 0;
-            double magnitude1 = 0;
-            double magnitude2 = 0;
+            float dotProduct = 0;
+            float magnitude1 = 0;
+            float magnitude2 = 0;
 
             for (int i = 0; i < embedding1.Length; i++)
             {
@@ -118,12 +121,12 @@ namespace ManualMate.Application.Services
             }
 
             if (magnitude1 == 0 || magnitude2 == 0)
-                return Result<double>.Ok(0);
+                return Result<float>.Ok(0);
 
             double similarity = dotProduct / (Math.Sqrt(magnitude1) * Math.Sqrt(magnitude2));
-            double res = Math.Max(-1.0, Math.Min(1.0, similarity));
+            float res = (float)Math.Max(-1.0, Math.Min(1.0, similarity));
 
-            return Result<double>.Ok(res);
+            return Result<float>.Ok(res);
         }
     }
 }

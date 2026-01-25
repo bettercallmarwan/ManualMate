@@ -12,6 +12,7 @@ namespace ManualMate.API.Controllers
         IManualProcessingService manualProcessingService,
         FileUploadService fileUploadService) : ControllerBase
     {
+        #region CRUD
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetProduct(int id)
         {
@@ -45,7 +46,8 @@ namespace ManualMate.API.Controllers
         {
             var result = await productService.DeleteAsync(id);
             return this.GetResponse<bool>(result);
-        }
+        } 
+        #endregion
 
         [HttpPost("upload-manual/{id:int}")]
         public async Task<IActionResult> UploadManual(int id, IFormFile file)
@@ -61,8 +63,12 @@ namespace ManualMate.API.Controllers
             return this.GetResponse<bool>(result);
         }
 
-        [HttpDelete("remove-manual-embeddings")]
-
+        [HttpDelete("embeddings/{id:int}")]
+        public async Task<IActionResult> DeleteProductEmbeddings(int id)
+        {
+            var result = await manualProcessingService.DeleteProductEmbeddingsAsync(id);
+            return this.GetResponse<bool>(result);
+        }
 
         [HttpGet("ask/{productId:int}")]
         public async Task<IActionResult> Ask(int productId, string question)

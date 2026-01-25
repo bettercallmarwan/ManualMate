@@ -40,7 +40,6 @@ namespace ManualMate.Application.Services
                 return Result<string>.Fail("Unexpected error: " + ex.Message, HttpStatusCode.InternalServerError);
             }
         }
-
         private async Task<HttpResponseMessage> GetGeminiResponse(string prompt)
         {
             var payload = new

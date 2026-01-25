@@ -68,6 +68,11 @@ export const productApi = {
     );
     return response.data.data;
   },
+
+  deleteEmbeddings: async (id: number): Promise<boolean> => {
+    const response = await api.delete<ApiResponse<boolean>>(`/product/embeddings/${id}`);
+    return response.data.data;
+  },
 };
 
 export default api;

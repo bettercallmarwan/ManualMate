@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { productApi } from '../services/api';
 import type { Product } from '../types';
-import { Upload, Play, Loader2, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { Upload, Play, Loader2, FileText, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 export default function ManualPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -9,8 +9,10 @@ export default function ManualPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [processingStatus, setProcessingStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [deleteStatus, setDeleteStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,11 +93,35 @@ export default function ManualPage() {
     }
   };
 
+  const handleDeleteEmbeddings = async () => {
+    if (!selectedProduct) {
+      setDeleteStatus({ type: 'error', message: 'Please select a product' });
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete all embeddings for "${selectedProduct.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteStatus(null);
+
+    try {
+      await productApi.deleteEmbeddings(selectedProduct.id);
+      setDeleteStatus({ type: 'success', message: 'Embeddings deleted successfully!' });
+      await loadProducts();
+    } catch (err: any) {
+      setDeleteStatus({ type: 'error', message: err.response?.data?.error || 'Failed to delete embeddings' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="px-4 py-6 sm:px-0">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Manual Management</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Section */}
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
@@ -156,11 +182,10 @@ export default function ManualPage() {
             </div>
 
             {uploadStatus && (
-              <div className={`flex items-center p-3 rounded-md ${
-                uploadStatus.type === 'success' 
-                  ? 'bg-green-50 text-green-800' 
-                  : 'bg-red-50 text-red-800'
-              }`}>
+              <div className={`flex items-center p-3 rounded-md ${uploadStatus.type === 'success'
+                ? 'bg-green-50 text-green-800'
+                : 'bg-red-50 text-red-800'
+                }`}>
                 {uploadStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
                 ) : (
@@ -237,11 +262,10 @@ export default function ManualPage() {
             )}
 
             {processingStatus && (
-              <div className={`flex items-center p-3 rounded-md ${
-                processingStatus.type === 'success' 
-                  ? 'bg-green-50 text-green-800' 
-                  : 'bg-red-50 text-red-800'
-              }`}>
+              <div className={`flex items-center p-3 rounded-md ${processingStatus.type === 'success'
+                ? 'bg-green-50 text-green-800'
+                : 'bg-red-50 text-red-800'
+                }`}>
                 {processingStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
                 ) : (
@@ -272,6 +296,87 @@ export default function ManualPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> Processing a manual will extract text, chunk it, generate embeddings, and store them in the database. This may take a few minutes depending on the manual size.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Delete Embeddings Section */}
+        <div className="bg-white shadow rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <Trash2 className="h-5 w-5 mr-2 text-red-600" />
+            Delete Embeddings
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="delete-product-select" className="block text-sm font-medium text-gray-700 mb-2">
+                Select Product
+              </label>
+              <select
+                id="delete-product-select"
+                value={selectedProduct?.id || ''}
+                onChange={(e) => {
+                  const product = products.find(p => p.id === parseInt(e.target.value));
+                  setSelectedProduct(product || null);
+                }}
+                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                disabled={loading}
+              >
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {selectedProduct && (
+              <div className="bg-gray-50 p-4 rounded-md">
+                <p className="text-sm text-gray-600">
+                  <span className="font-medium">Product:</span> {selectedProduct.name}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="font-medium">Description:</span> {selectedProduct.description}
+                </p>
+              </div>
+            )}
+
+            {deleteStatus && (
+              <div className={`flex items-center p-3 rounded-md ${deleteStatus.type === 'success'
+                  ? 'bg-green-50 text-green-800'
+                  : 'bg-red-50 text-red-800'
+                }`}>
+                {deleteStatus.type === 'success' ? (
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                ) : (
+                  <XCircle className="h-5 w-5 mr-2" />
+                )}
+                <span>{deleteStatus.message}</span>
+              </div>
+            )}
+
+            <button
+              onClick={handleDeleteEmbeddings}
+              disabled={deleting || !selectedProduct}
+              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-5 w-5 mr-2" />
+                  Delete All Embeddings
+                </>
+              )}
+            </button>
+
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <p className="text-sm text-red-800">
+                <strong>Warning:</strong> This will permanently delete all embeddings for the selected product. You will need to process the manual again to recreate them. This action cannot be undone.
               </p>
             </div>
           </div>

@@ -13,9 +13,12 @@ namespace ManualMate.Infrastructure.Repositories
         }
         public async Task RemoveForProduct(int productId)
         {
-            await dbContext.Database.ExecuteSqlInterpolatedAsync(
-                $"DELETE FROM ManualEmbeddings WHERE ProductId = {productId}"
-            );
+            var embeddings = await dbContext.Set<ManualEmbedding>()
+                .Where(e => e.ProductId == productId)
+                .ToListAsync();
+            
+            dbContext.Set<ManualEmbedding>().RemoveRange(embeddings);
+            await dbContext.SaveChangesAsync();
         }
         public Task<IEnumerable<ManualEmbedding>> GetAllAsync()
         {

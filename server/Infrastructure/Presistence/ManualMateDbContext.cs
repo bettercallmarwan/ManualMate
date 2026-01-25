@@ -17,6 +17,12 @@ namespace ManualMate.Infrastructure.Presistence
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.HasPostgresExtension("vector");
+
+            modelBuilder.Entity<ManualEmbedding>()
+                .Property(e => e.Embedding) // Replace 'Embedding' with your actual property name
+                .HasColumnType("vector(384)"); // 384 is the dimension size for bge-small-en-v1.5
+
             modelBuilder.Entity<ManualEmbedding>()
             .HasOne(e => e.Product)
             .WithMany(p => p.ManualEmbeddings)

@@ -1,11 +1,11 @@
 using ManualMate.API.Controllers.Responses;
 using ManualMate.Infrastructure.Presistence;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Text.Json.Serialization;
 using Serilog.Events;
 using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
 
 namespace ManualMate.API
 {
@@ -31,7 +31,6 @@ namespace ManualMate.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Add CORS
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>

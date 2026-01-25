@@ -14,7 +14,12 @@ namespace ManualMate.API
         {
             services.AddDbContext<ManualMateDbContext>(optionsAction =>
             {
-                optionsAction.UseSqlServer(configuration.GetConnectionString("ManualMateDbContext"));
+                optionsAction.UseNpgsql(
+                    configuration.GetConnectionString("ManualMateDbContext"),
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.UseVector();
+                    });
             });
             services.AddSingleton<IConnectionMultiplexer>(options =>
             {
@@ -30,39 +35,6 @@ namespace ManualMate.API
             services.AddScoped<ProductRepository>();
             services.AddScoped<ManualEmbeddingRepository>();
             services.AddAutoMapper(typeof(MappingProfile));
-
-            return services;
-        }
-
-        public static IServiceCollection AddQuartz(this IServiceCollection services)
-        {
-            //builder.Services.AddQuartz(q =>
-            //{
-            //    var jobKey1 = new JobKey("ProductCacheJob"); 
-
-            //    q.AddJob<ProductCacheJob>(options => options.WithIdentity(jobKey1)); 
-            //    q.AddTrigger(options => options
-            //        .ForJob(jobKey1)
-            //        .WithIdentity("ProductCacheJob-trigger")
-            //        .WithSimpleSchedule(s => s
-            //            .WithIntervalInMinutes(60)
-            //            .RepeatForever()
-            //        ).StartNow());
-
-            //    var jobKey2 = new JobKey("EmbeddingCacheJob");
-
-            //    q.AddJob<EmbeddingCacheJob>(options => options.WithIdentity(jobKey2));
-            //    q.AddTrigger(options => options
-            //        .ForJob(jobKey2)
-            //        .WithIdentity("EmbeddingCacheJob-trigger")
-            //        .WithSimpleSchedule(s => s
-            //            .WithIntervalInMinutes(60)
-            //            .RepeatForever()
-            //        ).StartNow());
-            //});
-
-            // to wait for any currently excecuting jobs to complete before shutting down program
-            //builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true); 
 
             return services;
         }
