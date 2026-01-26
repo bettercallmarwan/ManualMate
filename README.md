@@ -35,6 +35,10 @@
 
 ## Usage
 
+<p align="center">
+  <img src="assets/ManualMate Manual Management.png" alt="chat example" width="950">
+</p>
+
 ### Upload Product Manual
 
 `POST /api/product/upload-manual/{id}`
@@ -50,6 +54,13 @@
 ---
 
 ### Ask Questions
+<p align="center">
+  <img src="assets/ManualMate Chat Example.png" alt="chat example" width="950">
+</p>
+
+<p align="center">
+  <img src="assets/Manual Mate Chat Example 2.png" alt="chat example" width="950">
+</p>
 
 `POST /api/product/ask/{id}?question=How do I reset the device?`
 
