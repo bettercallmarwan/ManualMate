@@ -6,11 +6,10 @@
 
 <p align="center">
   <strong>RAG-Powered PDF Manuals Q&A System</strong><br>
-  A .NET Web API project designed for processing PDF user manuals, generating embeddings, and providing a Q&A service using Retrieval Augmented Generation (RAG), with integrated caching.
+  A .NET Full Stack Web Application designed for processing PDF user manuals, generating embeddings, and providing a Q&A service using Retrieval Augmented Generation (RAG), with integrated caching.
 </p>
 
 ---
-
 
 ## Table of Contents
 
@@ -26,12 +25,11 @@
 ## Features
 
 * **Retrieval Augmented Generation (RAG):** Implements a Q&A system for user manuals by retrieving relevant information and augmenting an LLM's response.
-* **Text Chunking and Embedding:** Processes manual content into chunks and generates embeddings using Hugging Face models.
-* **Caching with Redis:** Uses Redis to store data so repeated questions are answered much faster (for example, from ~2782 ms down to ~45 ms, which is about 98% faster).
+* **Smart Vector Storage (pgvector):** Uses PostgreSQL with `pgvector` to perform lightning-fast similarity searches directly in the database.
+* **Text Chunking and Embedding:** Processes manual content into chunks and generates embeddings using Hugging Face models (`bge-small-en-v1.5`).
+* **Caching with Redis:** Stores answers to repeated questions for instant retrieval.
 * **PDF Extraction:** Extracts text content from PDF manuals.
-* **RESTful API:** Provides a clean API for interacting with the manual processing and Q&A services.
-
-
+* **RESTful API:** Clean endpoints for managing manuals and asking questions.
 
 ---
 
@@ -47,18 +45,20 @@
 
 `POST /api/product/process-manual/{id}`
 
+*Extracts text, creates vector embeddings, and stores them in PostgreSQL for fast retrieval.*
+
 ---
 
 ### Ask Questions
 
-`POST api/product/ask/1?question=`
+`POST /api/product/ask/{id}?question=How do I reset the device?`
 
 **Response:**
 
 ```json
 {
-  "question": "How do I clean the filter?",
-  "answer": "According to the manual, clean the filter weekly by removing it and rinsing under warm water."
+  "question": "How do I reset the device?",
+  "answer": "According to the manual, press and hold the reset button for 5 seconds until the LED blinks."
 }
 ```
 
@@ -66,53 +66,43 @@
 
 ## Performance
 
-### Caching Impact
+Performance is optimized by moving from a traditional SQL search to **PostgreSQL with pgvector** and adding **Redis caching**.
 
-Example request:
+### 1. Vector Search Speed (PostgreSQL + pgvector)
+By using `pgvector`, I switched from slow manual calculations in code to native database indexes.
+* **Old Way :** Loaded all data into memory to find matches (Slow & Heavy).
+* **New Way (pgvector):** Uses HNSW indexes to find relevant answers in **milliseconds** without loading unnecessary data.
 
-```
-GET {{base-url}}/Product/ask/8?question=how to sleep
-```
+### 2. Caching Impact (Redis)
+We cache the final answers to prevent re-processing common questions.
 
-(Product **8** = PlayStation 5 manual)
+**Example Request:** `GET .../ask/8?question=how to sleep` (PlayStation 5 manual)
 
-* **Without Caching:** responded in **2782.38 ms**
-* **With Caching:** responded in **45.63 ms**
+* **First Request (Database Search):** ~2782 ms
+* **Second Request (Redis Cache):** ~45 ms
 
-This results are roughly **98% faster** for repeated queries.
+Result: **~98% Faster** for repeated questions.
 
 ---
 
 ## Key Components
 
 ### 1. RAG Service (`ManualQaService.cs`)
+* Coordinates the question-answering flow.
+* Uses vector search to find the best context.
 
-* Converts questions to embeddings
-* Performs similarity search
-* Generates answers using LLM (`gemini-2.5-flash-lite`)
+### 2. Database Service (`PostgreSQL + pgvector`)
+* Stores document text and their vector embeddings.
+* Performs **Cosine Distance** searches natively to find relevant manual chunks.
 
-### 2. Caching Service (`RedisService.cs`)
+### 3. Caching Service (`RedisService.cs`)
+* Intercepts requests to serve cached answers instantly.
 
-* Implements Redis-based caching
-* Stores frequently asked questions
-
-### 3. Embedding Service (`HuggingFaceEmbeddingService.cs`)
-
-* Converts text to semantic vectors
-* Uses Hugging Face models (`bge-small-en-v1.5`)
-* Calculates cosine similarity
+### 4. Embedding Service (`HuggingFaceEmbeddingService.cs`)
+* Converts text chunks into 384-dimensional vectors using `bge-small-en-v1.5`.
 
 ### 5. LLM Service (`GeminiLlmService.cs`)
-
-* Generates nl answers
-* Uses Google Gemini API
-* Grounded only in retrieved context
-
-### 6. Manual Processing (`ManualProcessingService.cs`)
-
-* Extracts text from PDFs
-* Chunks text into manageable pieces
-* Generates and stores embeddings
+* Generates natural language answers using Google Gemini.
 
 ---
 
@@ -121,21 +111,22 @@ This results are roughly **98% faster** for repeated queries.
 ### System Requirements
 
 * **.NET 8.0 SDK** or later
-* **SQL Server**
+* **PostgreSQL** (with `pgvector` extension enabled)
 * **Redis**
 
 ### API Keys
 
-* **Hugging Face API Token** - For Vector embeddings service
-* **Google Gemini API Key** - For LLM service
+* **Hugging Face API Token** (for Embeddings)
+* **Google Gemini API Key** (for Answer Generation)
 
 ---
+
 ## Setup
 
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/manualmate.git
+git clone
 cd manualmate
 ```
 
@@ -145,59 +136,42 @@ cd manualmate
 dotnet restore
 ```
 
-### 3. Install and Start Redis
+### 3. Database Setup (PostgreSQL)
 
-**Windows:**
-
-```bash
-# Using Chocolatey
-choco install redis-64
-
-# Start Redis
-redis-server
-```
-
-### 4. Database Setup
-
-Update `appsettings.json` with your connection string:
+Ensure PostgreSQL is installed. Update `appsettings.json` with your credentials:
 
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=.;Database=ManualMateDB;Trusted_Connection=True;TrustServerCertificate=True",
-    "Redis": "localhost:6379"
+    "ManualMateDbContext": "",
+    "Redis": ""
   }
 }
 ```
 
-Run migrations:
+Run migrations (this automatically enables the `vector` extension):
 
 ```bash
-dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-### 5. Configure API Keys
+### 4. Configure API Keys
 
 Add to `appsettings.json`:
 
 ```json
 {
   "HuggingFace": {
-    "ApiToken": "hf_your_token_here"
+    "ApiToken": ""
   },
   "Gemini": {
-    "ApiKey": "your_gemini_api_key_here"
+    "ApiKey": ""
   }
 }
 ```
 
-### 6. Run Application
+### 5. Run Application
 
 ```bash
 dotnet run
 ```
-
----
-
-
