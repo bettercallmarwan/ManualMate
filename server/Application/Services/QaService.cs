@@ -1,37 +1,30 @@
-﻿using AutoMapper;
-using ManualMate.API.Controllers.Responses;
+﻿using ManualMate.API.Controllers.Responses;
 using ManualMate.Application.DTOs;
 using ManualMate.Application.Interfaces;
-using ManualMate.Domain.Models;
-using ManualMate.Infrastructure.Presistence;
 using ManualMate.Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Pgvector.EntityFrameworkCore;
 
 namespace ManualMate.Application.Services
 {
-    public class ManualQaService(ManualMateDbContext dbContext,
-        ProductRepository productRepository,
+    public class QaService(ItemRepository itemRepository,
+        ItemFileEmbeddingRepository itemFileEmbeddingRepository,
         IEmbeddingService embeddingService,
         ILlmService llmService,
         IConfiguration configuration,
-        ICacheService cache) : IManualQaService
+        ICacheService cache) : IQaService
     {
-        private static int top_k = 7;
-        private static string context_seperator = "\n\n---\n\n";
+        private string context_seperator = configuration.GetSection("RAG")["context_seperator"]!;
         private TimeSpan ttl = TimeSpan.FromHours(double.Parse(configuration.GetSection("RedisSettings")["TimeToLiveInHours"]!));
 
-        public async Task<Result<string>> GetAnswerAsync(int productId, string question)
+        public async Task<Result<string>> GetAnswerAsync(int itemId, string question)
         {
-            var productExists = await productRepository.ProductExists(productId);
-            if (!productExists)
+            var itemExists = await itemRepository.ItemExists(itemId);
+            if (!itemExists)
             {
-                return Result<string>.Fail($"Product with id {productId} is not found");
+                return Result<string>.Fail($"Item with id {itemId} is not found");
             }
 
-
             string normalizedQuestion = string.Concat(question.Where(c => !char.IsWhiteSpace(c))).ToLower();
-            string cacheKey = $"question:{productId}:{normalizedQuestion}";
+            string cacheKey = $"question:{itemId}:{normalizedQuestion}";
 
             var cachedQuestion = await cache.GetAsync<QuestionCache>(cacheKey);
             if(cachedQuestion is not null)
@@ -48,12 +41,7 @@ namespace ManualMate.Application.Services
 
             var questionVector = questionEmbedding.Value;
 
-            var topChunks = await dbContext.Set<ManualEmbedding>()
-                .Where(e => e.ProductId == productId)
-                .OrderBy(e => e.Embedding.CosineDistance(questionVector))
-                .Take(top_k)
-                .Select(e => e.TextChunk)
-                .ToListAsync();
+            var topChunks = await itemFileEmbeddingRepository.GetItemTopChunks(itemId, questionVector);
 
             var context = string.Join(context_seperator, topChunks);
 
@@ -65,7 +53,7 @@ namespace ManualMate.Application.Services
 
             var questionToCache = new QuestionCache
             {
-                ProductId = productId,
+                ItemId = itemId,
                 Question = question,
                 Answer = answer.Value
             };

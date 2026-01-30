@@ -1,14 +1,14 @@
-export interface Product {
+export interface Item {
   id: number;
   name: string;
   description: string;
-  manualPath?: string;
+  filePath?: string;
 }
 
-export interface CreateProductDto {
+export interface CreateItemDto {
   name: string;
   description: string;
-  manualPath?: string;
+  filePath?: string;
 }
 
 export interface ApiResponse<T> {

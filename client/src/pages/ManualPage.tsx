@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { productApi } from '../services/api';
-import type { Product } from '../types';
+import { itemApi } from '../services/api';
+import type { Item } from '../types';
 import { Upload, Play, Loader2, FileText, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 
 export default function ManualPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -16,19 +16,19 @@ export default function ManualPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadProducts();
+    loadItems();
   }, []);
 
-  const loadProducts = async () => {
+  const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await productApi.getAll();
-      setProducts(data);
-      if (data.length > 0 && !selectedProduct) {
-        setSelectedProduct(data[0]);
+      const data = await itemApi.getAll();
+      setItems(data);
+      if (data.length > 0 && !selectedItem) {
+        setSelectedItem(data[0]);
       }
     } catch (err: any) {
-      setUploadStatus({ type: 'error', message: err.response?.data?.error || 'Failed to load products' });
+      setUploadStatus({ type: 'error', message: err.response?.data?.error || 'Failed to load items' });
     } finally {
       setLoading(false);
     }
@@ -48,8 +48,8 @@ export default function ManualPage() {
   };
 
   const handleUpload = async () => {
-    if (!selectedProduct || !file) {
-      setUploadStatus({ type: 'error', message: 'Please select a product and a PDF file' });
+    if (!selectedItem || !file) {
+      setUploadStatus({ type: 'error', message: 'Please select an item and a PDF file' });
       return;
     }
 
@@ -57,10 +57,10 @@ export default function ManualPage() {
     setUploadStatus(null);
 
     try {
-      await productApi.uploadManual(selectedProduct.id, file);
+      await itemApi.uploadFile(selectedItem.id, file);
       setUploadStatus({ type: 'success', message: 'Manual uploaded successfully!' });
       setFile(null);
-      await loadProducts();
+      await loadItems();
     } catch (err: any) {
       setUploadStatus({ type: 'error', message: err.response?.data?.error || 'Failed to upload manual' });
     } finally {
@@ -69,13 +69,13 @@ export default function ManualPage() {
   };
 
   const handleProcess = async () => {
-    if (!selectedProduct) {
-      setProcessingStatus({ type: 'error', message: 'Please select a product' });
+    if (!selectedItem) {
+      setProcessingStatus({ type: 'error', message: 'Please select an item' });
       return;
     }
 
-    if (!selectedProduct.manualPath) {
-      setProcessingStatus({ type: 'error', message: 'This product has no manual uploaded. Please upload a manual first.' });
+    if (!selectedItem.filePath) {
+      setProcessingStatus({ type: 'error', message: 'This item has no manual uploaded. Please upload a manual first.' });
       return;
     }
 
@@ -83,9 +83,9 @@ export default function ManualPage() {
     setProcessingStatus(null);
 
     try {
-      await productApi.processManual(selectedProduct.id);
+      await itemApi.processFile(selectedItem.id);
       setProcessingStatus({ type: 'success', message: 'Manual processed successfully! Embeddings have been created.' });
-      await loadProducts();
+      await loadItems();
     } catch (err: any) {
       setProcessingStatus({ type: 'error', message: err.response?.data?.error || 'Failed to process manual' });
     } finally {
@@ -94,12 +94,12 @@ export default function ManualPage() {
   };
 
   const handleDeleteEmbeddings = async () => {
-    if (!selectedProduct) {
-      setDeleteStatus({ type: 'error', message: 'Please select a product' });
+    if (!selectedItem) {
+      setDeleteStatus({ type: 'error', message: 'Please select an item' });
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete all embeddings for "${selectedProduct.name}"? This action cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete all embeddings for "${selectedItem.name}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -107,9 +107,9 @@ export default function ManualPage() {
     setDeleteStatus(null);
 
     try {
-      await productApi.deleteEmbeddings(selectedProduct.id);
+      await itemApi.deleteEmbeddings(selectedItem.id);
       setDeleteStatus({ type: 'success', message: 'Embeddings deleted successfully!' });
-      await loadProducts();
+      await loadItems();
     } catch (err: any) {
       setDeleteStatus({ type: 'error', message: err.response?.data?.error || 'Failed to delete embeddings' });
     } finally {
@@ -132,21 +132,21 @@ export default function ManualPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="product-select" className="block text-sm font-medium text-gray-700 mb-2">
-                Select Product
+                Select Item
               </label>
               <select
                 id="product-select"
-                value={selectedProduct?.id || ''}
+                value={selectedItem?.id || ''}
                 onChange={(e) => {
-                  const product = products.find(p => p.id === parseInt(e.target.value));
-                  setSelectedProduct(product || null);
+                  const item = items.find(p => p.id === parseInt(e.target.value));
+                  setSelectedItem(item || null);
                 }}
                 className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={loading}
               >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
@@ -197,7 +197,7 @@ export default function ManualPage() {
 
             <button
               onClick={handleUpload}
-              disabled={uploading || !file || !selectedProduct}
+              disabled={uploading || !file || !selectedItem}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploading ? (
@@ -225,35 +225,35 @@ export default function ManualPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="process-product-select" className="block text-sm font-medium text-gray-700 mb-2">
-                Select Product
+                Select Item
               </label>
               <select
                 id="process-product-select"
-                value={selectedProduct?.id || ''}
+                value={selectedItem?.id || ''}
                 onChange={(e) => {
-                  const product = products.find(p => p.id === parseInt(e.target.value));
-                  setSelectedProduct(product || null);
+                  const item = items.find(p => p.id === parseInt(e.target.value));
+                  setSelectedItem(item || null);
                 }}
                 className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={loading}
               >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} {product.manualPath ? '✓' : ''}
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} {item.filePath ? '✓' : ''}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedProduct && (
+            {selectedItem && (
               <div className="bg-gray-50 p-4 rounded-md">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Product:</span> {selectedProduct.name}
+                  <span className="font-medium">Item:</span> {selectedItem.name}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   <span className="font-medium">Manual:</span>{' '}
-                  {selectedProduct.manualPath ? (
-                    <span className="text-green-600">{selectedProduct.manualPath}</span>
+                  {selectedItem.filePath ? (
+                    <span className="text-green-600">{selectedItem.filePath}</span>
                   ) : (
                     <span className="text-red-600">No manual uploaded</span>
                   )}
@@ -277,7 +277,7 @@ export default function ManualPage() {
 
             <button
               onClick={handleProcess}
-              disabled={processing || !selectedProduct || !selectedProduct?.manualPath}
+              disabled={processing || !selectedItem || !selectedItem?.filePath}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {processing ? (
@@ -311,41 +311,41 @@ export default function ManualPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="delete-product-select" className="block text-sm font-medium text-gray-700 mb-2">
-                Select Product
+                Select Item
               </label>
               <select
                 id="delete-product-select"
-                value={selectedProduct?.id || ''}
+                value={selectedItem?.id || ''}
                 onChange={(e) => {
-                  const product = products.find(p => p.id === parseInt(e.target.value));
-                  setSelectedProduct(product || null);
+                  const item = items.find(p => p.id === parseInt(e.target.value));
+                  setSelectedItem(item || null);
                 }}
                 className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                 disabled={loading}
               >
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedProduct && (
+            {selectedItem && (
               <div className="bg-gray-50 p-4 rounded-md">
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Product:</span> {selectedProduct.name}
+                  <span className="font-medium">Item:</span> {selectedItem.name}
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Description:</span> {selectedProduct.description}
+                  <span className="font-medium">Description:</span> {selectedItem.description}
                 </p>
               </div>
             )}
 
             {deleteStatus && (
               <div className={`flex items-center p-3 rounded-md ${deleteStatus.type === 'success'
-                  ? 'bg-green-50 text-green-800'
-                  : 'bg-red-50 text-red-800'
+                ? 'bg-green-50 text-green-800'
+                : 'bg-red-50 text-red-800'
                 }`}>
                 {deleteStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
@@ -358,7 +358,7 @@ export default function ManualPage() {
 
             <button
               onClick={handleDeleteEmbeddings}
-              disabled={deleting || !selectedProduct}
+              disabled={deleting || !selectedItem}
               className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {deleting ? (
@@ -376,7 +376,7 @@ export default function ManualPage() {
 
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <p className="text-sm text-red-800">
-                <strong>Warning:</strong> This will permanently delete all embeddings for the selected product. You will need to process the manual again to recreate them. This action cannot be undone.
+                <strong>Warning:</strong> This will permanently delete all embeddings for the selected item. You will need to process the manual again to recreate them. This action cannot be undone.
               </p>
             </div>
           </div>

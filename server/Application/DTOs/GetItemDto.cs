@@ -2,12 +2,11 @@
 
 namespace ManualMate.Application.DTOs
 {
-    public class CreateProductDto
+    public class GetItemDto
     {
-        [Required]
+        public int Id { get; set; }
         public string Name { get; set; }
-        [Required]
         public string Description { get; set; }
-        public string? ManualPath { get; set; }
+        public string? FilePath { get; set; }
     }
 }

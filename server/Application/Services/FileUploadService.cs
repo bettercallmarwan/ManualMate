@@ -4,19 +4,19 @@ using System.Net;
 
 namespace ManualMate.Application.Services
 {
-    public class FileUploadService(ProductRepository productRepository)
+    public class FileUploadService(ItemRepository itemRepository)
     {
-        public async Task<Result<string>> UploadProductManualAsync(int productId, IFormFile file)
+        public async Task<Result<string>> UploadItemFileAsync(int itemId, IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
                 return Result<string>.Fail("File Is Empty or Null", HttpStatusCode.BadRequest);
             }
 
-            var productExists = await productRepository.ProductExists(productId);
-            if (!productExists)
+            var itemExists = await itemRepository.ItemExists(itemId);
+            if (!itemExists)
             {
-                return Result<string>.Fail($"Product with id : {productId} not found", HttpStatusCode.NotFound);
+                return Result<string>.Fail($"Item with id : {itemId} not found", HttpStatusCode.NotFound);
             }
 
             var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
@@ -25,13 +25,13 @@ namespace ManualMate.Application.Services
                 return Result<string>.Fail($"File type {fileExtension} is not allowed", HttpStatusCode.BadRequest);
             }
 
-            var fileName = $"{productId}_{Guid.NewGuid()}{fileExtension}";
-            var manualsPath = Path.Combine("wwwroot", "Manuals");
+            var fileName = $"{itemId}_{Guid.NewGuid()}{fileExtension}";
+            var filesPath = Path.Combine("wwwroot", "Files");
             
-            if (!Directory.Exists(manualsPath))
-                Directory.CreateDirectory(manualsPath);
+            if (!Directory.Exists(filesPath))
+                Directory.CreateDirectory(filesPath);
 
-            var filePath = Path.Combine(manualsPath, fileName);
+            var filePath = Path.Combine(filesPath, fileName);
 
             try
             {
@@ -40,22 +40,22 @@ namespace ManualMate.Application.Services
                     await file.CopyToAsync(stream);
                 }
 
-                var product = await productRepository.GetAsync(productId);
-                if (product == null)
+                var item = await itemRepository.GetAsync(itemId);
+                if (item == null)
                 {
-                    return Result<string>.Fail($"Product with id : {productId} not found", HttpStatusCode.NotFound);
+                    return Result<string>.Fail($"Item with id : {itemId} not found", HttpStatusCode.NotFound);
                 }
 
-                if (!string.IsNullOrEmpty(product.ManualPath) && File.Exists(product.ManualPath))
+                if (!string.IsNullOrEmpty(item.FilePath) && File.Exists(item.FilePath))
                 {
-                    File.Delete(product.ManualPath);
+                    File.Delete(item.FilePath);
                 }
 
-                product.ManualPath = filePath;
-                product.LastUpdated = DateTime.UtcNow;
+                item.FilePath = filePath;
+                item.LastUpdated = DateTime.UtcNow;
 
-                await productRepository.SaveChangesAsync();
-                return Result<string>.Ok(product.ManualPath);
+                await itemRepository.SaveChangesAsync();
+                return Result<string>.Ok(item.FilePath);
             }
             catch (Exception)
             {

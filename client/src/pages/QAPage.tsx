@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { productApi } from '../services/api';
-import type { Product } from '../types';
+import { itemApi } from '../services/api';
+import type { Item } from '../types';
 import { Send, Loader2, MessageCircle, Bot, User } from 'lucide-react';
 
 interface Message {
@@ -10,8 +10,8 @@ interface Message {
 }
 
 export default function QAPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,19 +19,19 @@ export default function QAPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProducts();
+    loadItems();
   }, []);
 
-  const loadProducts = async () => {
+  const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await productApi.getAll();
-      setProducts(data);
-      if (data.length > 0 && !selectedProduct) {
-        setSelectedProduct(data[0]);
+      const data = await itemApi.getAll();
+      setItems(data);
+      if (data.length > 0 && !selectedItem) {
+        setSelectedItem(data[0]);
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load products');
+      setError(err.response?.data?.error || 'Failed to load items');
     } finally {
       setLoading(false);
     }
@@ -39,14 +39,14 @@ export default function QAPage() {
 
   const handleAsk = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!selectedProduct || !question.trim()) {
-      setError('Please select a product and enter a question');
+
+    if (!selectedItem || !question.trim()) {
+      setError('Please select an item and enter a question');
       return;
     }
 
-    if (!selectedProduct.manualPath) {
-      setError('This product has no manual. Please upload and process a manual first.');
+    if (!selectedItem.filePath) {
+      setError('This item has no manual. Please upload and process a manual first.');
       return;
     }
 
@@ -63,7 +63,7 @@ export default function QAPage() {
     setQuestion('');
 
     try {
-      const answer = await productApi.ask(selectedProduct.id, currentQuestion);
+      const answer = await itemApi.ask(selectedItem.id, currentQuestion);
       const assistantMessage: Message = {
         role: 'assistant',
         content: answer,
@@ -108,25 +108,25 @@ export default function QAPage() {
           </label>
           <select
             id="qa-product-select"
-            value={selectedProduct?.id || ''}
+            value={selectedItem?.id || ''}
             onChange={(e) => {
-              const product = products.find(p => p.id === parseInt(e.target.value));
-              setSelectedProduct(product || null);
+              const item = items.find(p => p.id === parseInt(e.target.value));
+              setSelectedItem(item || null);
               setMessages([]);
               setError(null);
             }}
             className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
             disabled={loading}
           >
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.name} {product.manualPath ? '✓' : ''}
+            {items.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name} {item.filePath ? '✓' : ''}
               </option>
             ))}
           </select>
-          {selectedProduct && !selectedProduct.manualPath && (
+          {selectedItem && !selectedItem.filePath && (
             <p className="mt-2 text-sm text-red-600">
-              ⚠️ This product has no manual. Please upload and process a manual first.
+              ⚠️ This item has no manual. Please upload and process a manual first.
             </p>
           )}
         </div>
@@ -137,8 +137,8 @@ export default function QAPage() {
             <div className="flex items-center justify-center h-full text-gray-400">
               <div className="text-center">
                 <Bot className="h-12 w-12 mx-auto mb-4" />
-                <p className="text-lg">Ask a question about the product manual</p>
-                <p className="text-sm mt-2">Select a product and start asking questions!</p>
+                <p className="text-lg">Ask a question about the item manual</p>
+                <p className="text-sm mt-2">Select an item and start asking questions!</p>
               </div>
             </div>
           ) : (
@@ -148,11 +148,10 @@ export default function QAPage() {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-3xl rounded-lg px-4 py-2 ${
-                    message.role === 'user'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
+                  className={`max-w-3xl rounded-lg px-4 py-2 ${message.role === 'user'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                    }`}
                 >
                   <div className="flex items-start">
                     {message.role === 'assistant' && (
@@ -163,9 +162,8 @@ export default function QAPage() {
                     )}
                     <div className="flex-1">
                       <p className="whitespace-pre-wrap">{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.role === 'user' ? 'text-primary-100' : 'text-gray-500'
-                      }`}>
+                      <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-primary-100' : 'text-gray-500'
+                        }`}>
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -202,13 +200,13 @@ export default function QAPage() {
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask a question about the product manual..."
+              placeholder="Ask a question about the item manual..."
               className="flex-1 border border-gray-300 rounded-md shadow-sm py-2 px-4 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              disabled={asking || !selectedProduct || !selectedProduct?.manualPath}
+              disabled={asking || !selectedItem || !selectedItem?.filePath}
             />
             <button
               type="submit"
-              disabled={asking || !question.trim() || !selectedProduct || !selectedProduct?.manualPath}
+              disabled={asking || !question.trim() || !selectedItem || !selectedItem?.filePath}
               className="inline-flex items-center px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {asking ? (

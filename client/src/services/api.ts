@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Product, CreateProductDto, ApiResponse, ApiError } from '../types';
+import type { Item, CreateItemDto, ApiResponse, ApiError } from '../types';
 
 // Use proxy in development, or full URL in production
 // In development, always use the proxy to avoid CORS issues
@@ -12,38 +12,38 @@ const api = axios.create({
   },
 });
 
-// Products API
-export const productApi = {
-  getAll: async (): Promise<Product[]> => {
-    const response = await api.get<ApiResponse<Product[]>>('/product');
+// Items API
+export const itemApi = {
+  getAll: async (): Promise<Item[]> => {
+    const response = await api.get<ApiResponse<Item[]>>('/item');
     return response.data.data;
   },
 
-  getById: async (id: number): Promise<Product> => {
-    const response = await api.get<ApiResponse<Product>>(`/product/${id}`);
+  getById: async (id: number): Promise<Item> => {
+    const response = await api.get<ApiResponse<Item>>(`/item/${id}`);
     return response.data.data;
   },
 
-  create: async (product: CreateProductDto): Promise<CreateProductDto> => {
-    const response = await api.post<ApiResponse<CreateProductDto>>('/product', product);
+  create: async (item: CreateItemDto): Promise<CreateItemDto> => {
+    const response = await api.post<ApiResponse<CreateItemDto>>('/item', item);
     return response.data.data;
   },
 
-  update: async (id: number, product: CreateProductDto): Promise<Product> => {
-    const response = await api.put<ApiResponse<Product>>(`/product/${id}`, product);
+  update: async (id: number, item: CreateItemDto): Promise<Item> => {
+    const response = await api.put<ApiResponse<Item>>(`/item/${id}`, item);
     return response.data.data;
   },
 
   delete: async (id: number): Promise<boolean> => {
-    const response = await api.delete<ApiResponse<boolean>>(`/product/${id}`);
+    const response = await api.delete<ApiResponse<boolean>>(`/item/${id}`);
     return response.data.data;
   },
 
-  uploadManual: async (id: number, file: File): Promise<string> => {
+  uploadFile: async (id: number, file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
     const response = await api.post<ApiResponse<string>>(
-      `/product/upload-manual/${id}`,
+      `/item/upload-file/${id}`,
       formData,
       {
         headers: {
@@ -54,14 +54,14 @@ export const productApi = {
     return response.data.data;
   },
 
-  processManual: async (id: number): Promise<boolean> => {
-    const response = await api.get<ApiResponse<boolean>>(`/product/process-manual/${id}`);
+  processFile: async (id: number): Promise<boolean> => {
+    const response = await api.get<ApiResponse<boolean>>(`/item/process-file/${id}`);
     return response.data.data;
   },
 
-  ask: async (productId: number, question: string): Promise<string> => {
+  ask: async (itemId: number, question: string): Promise<string> => {
     const response = await api.get<ApiResponse<string>>(
-      `/product/ask/${productId}`,
+      `/item/ask/${itemId}`,
       {
         params: { question },
       }
@@ -70,7 +70,7 @@ export const productApi = {
   },
 
   deleteEmbeddings: async (id: number): Promise<boolean> => {
-    const response = await api.delete<ApiResponse<boolean>>(`/product/embeddings/${id}`);
+    const response = await api.delete<ApiResponse<boolean>>(`/item/embeddings/${id}`);
     return response.data.data;
   },
 };

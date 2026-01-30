@@ -10,11 +10,11 @@ using Pgvector;
 
 #nullable disable
 
-namespace ManualMate.Migrations
+namespace ManualMate.Infrastructure.Migrations
 {
     [DbContext(typeof(ManualMateDbContext))]
-    [Migration("20260125214409_InitialPostgresMigration")]
-    partial class InitialPostgresMigration
+    [Migration("20260129223051_InitialPostgreSQLCreate")]
+    partial class InitialPostgreSQLCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,7 +27,7 @@ namespace ManualMate.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ManualMate.Domain.Models.ManualEmbedding", b =>
+            modelBuilder.Entity("ManualMate.Domain.Models.FileEmbedding", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -45,7 +45,7 @@ namespace ManualMate.Migrations
                         .IsRequired()
                         .HasColumnType("vector(384)");
 
-                    b.Property<int>("ProductId")
+                    b.Property<int>("ItemId")
                         .HasColumnType("integer");
 
                     b.Property<string>("TextChunk")
@@ -54,12 +54,12 @@ namespace ManualMate.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ItemId");
 
-                    b.ToTable("ManualEmbeddings");
+                    b.ToTable("FileEmbeddings");
                 });
 
-            modelBuilder.Entity("ManualMate.Domain.Models.Product", b =>
+            modelBuilder.Entity("ManualMate.Domain.Models.Item", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -71,11 +71,11 @@ namespace ManualMate.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("FilePath")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ManualPath")
-                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -83,23 +83,23 @@ namespace ManualMate.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("ManualMate.Domain.Models.ManualEmbedding", b =>
+            modelBuilder.Entity("ManualMate.Domain.Models.FileEmbedding", b =>
                 {
-                    b.HasOne("ManualMate.Domain.Models.Product", "Product")
-                        .WithMany("ManualEmbeddings")
-                        .HasForeignKey("ProductId")
+                    b.HasOne("ManualMate.Domain.Models.Item", "item")
+                        .WithMany("FileEmbeddings")
+                        .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Product");
+                    b.Navigation("item");
                 });
 
-            modelBuilder.Entity("ManualMate.Domain.Models.Product", b =>
+            modelBuilder.Entity("ManualMate.Domain.Models.Item", b =>
                 {
-                    b.Navigation("ManualEmbeddings");
+                    b.Navigation("FileEmbeddings");
                 });
 #pragma warning restore 612, 618
         }

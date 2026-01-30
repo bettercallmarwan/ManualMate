@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import ProductsPage from './pages/ProductsPage';
+import ItemsPage from './pages/ItemsPage';
 import ManualPage from './pages/ManualPage';
 import QAPage from './pages/QAPage';
 import { BookOpen, Package, MessageCircle } from 'lucide-react';
@@ -22,7 +22,7 @@ function App() {
                     className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-600"
                   >
                     <Package className="h-4 w-4 mr-2" />
-                    Products
+                    Items
                   </Link>
                   <Link
                     to="/manual"
@@ -46,7 +46,7 @@ function App() {
 
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <Routes>
-            <Route path="/" element={<ProductsPage />} />
+            <Route path="/" element={<ItemsPage />} />
             <Route path="/manual" element={<ManualPage />} />
             <Route path="/qa" element={<QAPage />} />
           </Routes>

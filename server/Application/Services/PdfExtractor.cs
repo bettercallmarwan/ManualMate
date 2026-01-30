@@ -1,4 +1,5 @@
 ﻿using ManualMate.API.Controllers.Responses;
+using System.Net;
 using System.Text;
 using UglyToad.PdfPig;
 
@@ -20,10 +21,10 @@ namespace ManualMate.Application.Services
 
                 return Result<string>.Ok(text.ToString());
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
-            }
+                return Result<string>.Fail("Unexpected error while extracting text from uploaded file: " + ex.Message, HttpStatusCode.InternalServerError);
+            }      
         }
     }
 }

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { productApi } from '../services/api';
-import type { Product, CreateProductDto } from '../types';
+import { itemApi } from '../services/api';
+import type { Item, CreateItemDto } from '../types';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 
-export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+export default function ItemsPage() {
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [formData, setFormData] = useState<CreateProductDto>({
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [formData, setFormData] = useState<CreateItemDto>({
     name: '',
     description: '',
   });
@@ -16,17 +16,17 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadProducts();
+    loadItems();
   }, []);
 
-  const loadProducts = async () => {
+  const loadItems = async () => {
     try {
       setLoading(true);
-      const data = await productApi.getAll();
-      setProducts(data);
+      const data = await itemApi.getAll();
+      setItems(data);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load products');
+      setError(err.response?.data?.error || 'Failed to load items');
     } finally {
       setLoading(false);
     }
@@ -38,44 +38,44 @@ export default function ProductsPage() {
     setError(null);
 
     try {
-      if (editingProduct) {
-        await productApi.update(editingProduct.id, formData);
+      if (editingItem) {
+        await itemApi.update(editingItem.id, formData);
       } else {
-        await productApi.create(formData);
+        await itemApi.create(formData);
       }
-      await loadProducts();
+      await loadItems();
       setShowModal(false);
-      setEditingProduct(null);
+      setEditingItem(null);
       setFormData({ name: '', description: '' });
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save product');
+      setError(err.response?.data?.error || 'Failed to save item');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
+  const handleEdit = (item: Item) => {
+    setEditingItem(item);
     setFormData({
-      name: product.name,
-      description: product.description,
+      name: item.name,
+      description: item.description,
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
-      await productApi.delete(id);
-      await loadProducts();
+      await itemApi.delete(id);
+      await loadItems();
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete product');
+      setError(err.response?.data?.error || 'Failed to delete item');
     }
   };
 
   const openCreateModal = () => {
-    setEditingProduct(null);
+    setEditingItem(null);
     setFormData({ name: '', description: '' });
     setShowModal(true);
   };
@@ -83,13 +83,13 @@ export default function ProductsPage() {
   return (
     <div className="px-4 py-6 sm:px-0">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Items</h1>
         <button
           onClick={openCreateModal}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <Plus className="h-5 w-5 mr-2" />
-          Add Product
+          Add Item
         </button>
       </div>
 
@@ -103,34 +103,34 @@ export default function ProductsPage() {
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
         </div>
-      ) : products.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No products found. Create your first product!</p>
+          <p className="text-gray-500 text-lg">No items found. Create your first item!</p>
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">
           <ul className="divide-y divide-gray-200">
-            {products.map((product) => (
-              <li key={product.id}>
+            {items.map((item) => (
+              <li key={item.id}>
                 <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">{product.description}</p>
-                    {product.manualPath && (
+                    <h3 className="text-lg font-medium text-gray-900">{item.name}</h3>
+                    <p className="mt-1 text-sm text-gray-500">{item.description}</p>
+                    {item.filePath && (
                       <p className="mt-1 text-xs text-primary-600">
-                        Manual: {product.manualPath}
+                        File: {item.filePath}
                       </p>
                     )}
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <button
-                      onClick={() => handleEdit(product)}
+                      onClick={() => handleEdit(item)}
                       className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(product.id)}
+                      onClick={() => handleDelete(item.id)}
                       className="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -152,7 +152,7 @@ export default function ProductsPage() {
               <form onSubmit={handleSubmit}>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-                    {editingProduct ? 'Edit Product' : 'Create Product'}
+                    {editingItem ? 'Edit Item' : 'Create Item'}
                   </h3>
                   <div className="space-y-4">
                     <div>
@@ -192,14 +192,14 @@ export default function ProductsPage() {
                     {submitting ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
-                      editingProduct ? 'Update' : 'Create'
+                      editingItem ? 'Update' : 'Create'
                     )}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setShowModal(false);
-                      setEditingProduct(null);
+                      setEditingItem(null);
                       setFormData({ name: '', description: '' });
                     }}
                     className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"

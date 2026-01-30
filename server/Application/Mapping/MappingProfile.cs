@@ -8,9 +8,9 @@ namespace ManualMate.Application.Mapping
     {
         public MappingProfile()
         {
-            CreateMap<ManualEmbedding, ManualEmbeddingDto>();
-            CreateMap<GetProductDto, Product>().ReverseMap();
-            CreateMap<CreateProductDto, Product>().ReverseMap();
+            //CreateMap<FileEmbedding, FileEmbeddingDto>();
+            CreateMap<GetItemDto, Item>().ReverseMap();
+            CreateMap<CreateItemDto, Item>().ReverseMap();
         }
     }
 }

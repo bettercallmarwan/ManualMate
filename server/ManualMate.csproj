@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -35,9 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\Manuals\Galaxy_S24_Manual.pdf" />
-    <None Include="wwwroot\Manuals\PS5_Manual.pdf" />
-    <None Include="wwwroot\Manuals\Sharp_Ac_Manual.pdf" />
+    <None Include="wwwroot\Files\Galaxy_S24_Manual.pdf" />
+    <None Include="wwwroot\Files\PS5_Manual.pdf" />
+    <None Include="wwwroot\Files\Sharp_Ac_Manual.pdf" />
   </ItemGroup>
 
 </Project>

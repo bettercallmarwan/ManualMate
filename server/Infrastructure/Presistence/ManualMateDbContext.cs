@@ -5,8 +5,8 @@ namespace ManualMate.Infrastructure.Presistence
 {
     public class ManualMateDbContext : DbContext
     {
-        public DbSet<Product> Products { get; set; }
-        public DbSet<ManualEmbedding> ManualEmbeddings { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<FileEmbedding> FileEmbeddings { get; set; }
         public ManualMateDbContext(DbContextOptions<ManualMateDbContext> options)
             : base(options)
         {
@@ -19,14 +19,14 @@ namespace ManualMate.Infrastructure.Presistence
 
             modelBuilder.HasPostgresExtension("vector");
 
-            modelBuilder.Entity<ManualEmbedding>()
-                .Property(e => e.Embedding) // Replace 'Embedding' with your actual property name
-                .HasColumnType("vector(384)"); // 384 is the dimension size for bge-small-en-v1.5
+            modelBuilder.Entity<FileEmbedding>()
+                .Property(e => e.Embedding) 
+                .HasColumnType("vector(384)"); 
 
-            modelBuilder.Entity<ManualEmbedding>()
-            .HasOne(e => e.Product)
-            .WithMany(p => p.ManualEmbeddings)
-            .HasForeignKey(e => e.ProductId)
+            modelBuilder.Entity<FileEmbedding>()
+            .HasOne(e => e.item)
+            .WithMany(p => p.FileEmbeddings)
+            .HasForeignKey(e => e.ItemId)
             .OnDelete(DeleteBehavior.Cascade);
         }
     }

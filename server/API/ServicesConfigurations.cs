@@ -1,6 +1,9 @@
-﻿using ManualMate.Application.Interfaces;
+﻿using FluentValidation;
+using FluentValidation.AspNetCore;
+using ManualMate.Application.Interfaces;
 using ManualMate.Application.Mapping;
 using ManualMate.Application.Services;
+using ManualMate.Application.Validators;
 using ManualMate.Infrastructure.Presistence;
 using ManualMate.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -21,19 +24,24 @@ namespace ManualMate.API
                         npgsqlOptions.UseVector();
                     });
             });
+
             services.AddSingleton<IConnectionMultiplexer>(options =>
             {
                 return ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")!);
             });
-            services.AddScoped<ProductService>();
+
+            services.AddFluentValidationAutoValidation();
+            services.AddValidatorsFromAssemblyContaining<CreateItemDtoValidator>();
+
+            services.AddScoped<ItemService>();
             services.AddScoped<ICacheService, RedisCacheService>();
             services.AddScoped<FileUploadService>();
             services.AddScoped<IEmbeddingService, HuggingFaceEmbeddingService>();
-            services.AddScoped<IManualProcessingService, ManualProcessingService>();
+            services.AddScoped<IFileProcessingService, FileProcessingService>();
             services.AddScoped<ILlmService, GeminiLlmService>();
-            services.AddScoped<IManualQaService, ManualQaService>();
-            services.AddScoped<ProductRepository>();
-            services.AddScoped<ManualEmbeddingRepository>();
+            services.AddScoped<IQaService, QaService>();
+            services.AddScoped<ItemRepository>();
+            services.AddScoped<ItemFileEmbeddingRepository>();
             services.AddAutoMapper(typeof(MappingProfile));
 
             return services;

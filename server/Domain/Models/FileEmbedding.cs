@@ -1,13 +1,10 @@
-﻿using Pgvector;
-using System.Numerics;
-
-namespace ManualMate.Domain.Models
+﻿namespace ManualMate.Domain.Models
 {
-    public class ManualEmbedding
+    public class FileEmbedding
     {
         public int Id { get; set; }
-        public int ProductId { get; set; }
-        public Product Product { get; set; }
+        public int ItemId { get; set; }
+        public Item item { get; set; }
 
         public string TextChunk { get; set; }
         public int ChunkIndex { get; set; }
