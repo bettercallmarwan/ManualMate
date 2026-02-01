@@ -7,33 +7,33 @@ import { BookOpen, Package, MessageCircle } from 'lucide-react';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm border-b border-gray-200">
+      <div className="min-h-screen bg-[#1a1b1e]">
+        <nav className="bg-[#202123] sticky top-0 z-50 border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
-                  <BookOpen className="h-8 w-8 text-primary-600" />
-                  <span className="ml-2 text-xl font-bold text-gray-900">ManualMate</span>
+                  <BookOpen className="h-8 w-8 text-gray-100" />
+                  <span className="ml-2 text-xl font-bold text-gray-100">ManualMate</span>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                   <Link
                     to="/"
-                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-600"
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-400 transition-all duration-200"
                   >
                     <Package className="h-4 w-4 mr-2" />
                     Items
                   </Link>
                   <Link
                     to="/manual"
-                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-600"
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-400 transition-all duration-200"
                   >
                     <BookOpen className="h-4 w-4 mr-2" />
-                    Manuals
+                    Files
                   </Link>
                   <Link
                     to="/qa"
-                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-600"
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-300 hover:text-white border-b-2 border-transparent hover:border-gray-400 transition-all duration-200"
                   >
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Q&A

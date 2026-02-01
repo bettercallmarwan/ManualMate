@@ -118,20 +118,20 @@ export default function ManualPage() {
   };
 
   return (
-    <div className="px-4 py-6 sm:px-0">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Manual Management</h1>
+    <div className="px-4 py-6 sm:px-0 animate-fade-in">
+      <h1 className="text-3xl font-bold text-white mb-6">Items Management</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Upload Section */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-            <Upload className="h-5 w-5 mr-2 text-primary-600" />
-            Upload Manual
+        <div className="bg-[#202123] shadow-xl rounded-lg p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Upload className="h-5 w-5 mr-2 text-blue-400" />
+            Upload File
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="product-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="product-select" className="block text-sm font-medium text-gray-300 mb-2">
                 Select Item
               </label>
               <select
@@ -141,7 +141,7 @@ export default function ManualPage() {
                   const item = items.find(p => p.id === parseInt(e.target.value));
                   setSelectedItem(item || null);
                 }}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full bg-slate-800/50 border border-slate-600 rounded-lg shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                 disabled={loading}
               >
                 {items.map((item) => (
@@ -153,14 +153,14 @@ export default function ManualPage() {
             </div>
 
             <div>
-              <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="file-upload" className="block text-sm font-medium text-gray-300 mb-2">
                 PDF Manual File
               </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-primary-400 transition-colors">
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-600 border-dashed rounded-xl hover:border-blue-400 hover:bg-slate-800/30 transition-all duration-300">
                 <div className="space-y-1 text-center">
-                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="flex text-sm text-gray-600">
-                    <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                  <FileText className="mx-auto h-12 w-12 text-blue-400" />
+                  <div className="flex text-sm text-gray-300">
+                    <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-blue-400 hover:text-blue-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 transition-colors">
                       <span>Upload a file</span>
                       <input
                         id="file-upload"
@@ -173,18 +173,18 @@ export default function ManualPage() {
                     </label>
                     <p className="pl-1">or drag and drop</p>
                   </div>
-                  <p className="text-xs text-gray-500">PDF up to 10MB</p>
+                  <p className="text-xs text-gray-400">PDF up to 10MB</p>
                   {file && (
-                    <p className="text-sm text-primary-600 mt-2">{file.name}</p>
+                    <p className="text-sm text-blue-400 mt-2 font-medium">{file.name}</p>
                   )}
                 </div>
               </div>
             </div>
 
             {uploadStatus && (
-              <div className={`flex items-center p-3 rounded-md ${uploadStatus.type === 'success'
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
+              <div className={`flex items-center p-3 rounded-xl backdrop-blur-sm ${uploadStatus.type === 'success'
+                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                : 'bg-red-500/20 text-red-300 border border-red-500/30'
                 }`}>
                 {uploadStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
@@ -198,7 +198,7 @@ export default function ManualPage() {
             <button
               onClick={handleUpload}
               disabled={uploading || !file || !selectedItem}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex justify-center items-center px-4 py-2.5 border-0 rounded-xl shadow-lg text-sm font-medium text-white gradient-blue hover:scale-105 hover-glow-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-300"
             >
               {uploading ? (
                 <>
@@ -208,7 +208,7 @@ export default function ManualPage() {
               ) : (
                 <>
                   <Upload className="h-5 w-5 mr-2" />
-                  Upload Manual
+                  Upload File
                 </>
               )}
             </button>
@@ -216,15 +216,15 @@ export default function ManualPage() {
         </div>
 
         {/* Process Section */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-            <Play className="h-5 w-5 mr-2 text-primary-600" />
-            Process Manual
+        <div className="bg-[#202123] shadow-xl rounded-lg p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Play className="h-5 w-5 mr-2 text-green-400" />
+            Process File
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="process-product-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="process-product-select" className="block text-sm font-medium text-gray-300 mb-2">
                 Select Item
               </label>
               <select
@@ -234,7 +234,7 @@ export default function ManualPage() {
                   const item = items.find(p => p.id === parseInt(e.target.value));
                   setSelectedItem(item || null);
                 }}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full bg-slate-800/50 border border-slate-600 rounded-lg shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
                 disabled={loading}
               >
                 {items.map((item) => (
@@ -246,25 +246,25 @@ export default function ManualPage() {
             </div>
 
             {selectedItem && (
-              <div className="bg-gray-50 p-4 rounded-md">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Item:</span> {selectedItem.name}
+              <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-gray-300">
+                  <span className="font-medium text-white">Item:</span> {selectedItem.name}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Manual:</span>{' '}
+                <p className="text-sm text-gray-300 mt-1">
+                  <span className="font-medium text-white">FIle:</span>{' '}
                   {selectedItem.filePath ? (
-                    <span className="text-green-600">{selectedItem.filePath}</span>
+                    <span className="text-green-400">{selectedItem.filePath}</span>
                   ) : (
-                    <span className="text-red-600">No manual uploaded</span>
+                    <span className="text-red-400">No File uploaded</span>
                   )}
                 </p>
               </div>
             )}
 
             {processingStatus && (
-              <div className={`flex items-center p-3 rounded-md ${processingStatus.type === 'success'
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
+              <div className={`flex items-center p-3 rounded-xl backdrop-blur-sm ${processingStatus.type === 'success'
+                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                : 'bg-red-500/20 text-red-300 border border-red-500/30'
                 }`}>
                 {processingStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
@@ -278,7 +278,7 @@ export default function ManualPage() {
             <button
               onClick={handleProcess}
               disabled={processing || !selectedItem || !selectedItem?.filePath}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex justify-center items-center px-4 py-2.5 border-0 rounded-xl shadow-lg text-sm font-medium text-white gradient-green hover:scale-105 hover-glow-green focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-300"
             >
               {processing ? (
                 <>
@@ -288,29 +288,29 @@ export default function ManualPage() {
               ) : (
                 <>
                   <Play className="h-5 w-5 mr-2" />
-                  Process Manual & Create Embeddings
+                  Process File & Create Embeddings
                 </>
               )}
             </button>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> Processing a manual will extract text, chunk it, generate embeddings, and store them in the database. This may take a few minutes depending on the manual size.
+            <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-sm text-blue-300">
+                <strong>Note:</strong> Processing a file will extract text, chunk it, generate embeddings, and store them in the database. This may take a few minutes depending on the file size.
               </p>
             </div>
           </div>
         </div>
 
         {/* Delete Embeddings Section */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-            <Trash2 className="h-5 w-5 mr-2 text-red-600" />
+        <div className="bg-[#202123] shadow-xl rounded-lg p-6 border border-white/10 hover:border-white/20 transition-all duration-300">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <Trash2 className="h-5 w-5 mr-2 text-red-400" />
             Delete Embeddings
           </h2>
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="delete-product-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="delete-product-select" className="block text-sm font-medium text-gray-300 mb-2">
                 Select Item
               </label>
               <select
@@ -320,7 +320,7 @@ export default function ManualPage() {
                   const item = items.find(p => p.id === parseInt(e.target.value));
                   setSelectedItem(item || null);
                 }}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="block w-full bg-slate-800/50 border border-slate-600 rounded-lg shadow-sm py-2 px-3 text-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
                 disabled={loading}
               >
                 {items.map((item) => (
@@ -332,20 +332,20 @@ export default function ManualPage() {
             </div>
 
             {selectedItem && (
-              <div className="bg-gray-50 p-4 rounded-md">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Item:</span> {selectedItem.name}
+              <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
+                <p className="text-sm text-gray-300">
+                  <span className="font-medium text-white">Item:</span> {selectedItem.name}
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Description:</span> {selectedItem.description}
+                <p className="text-sm text-gray-300 mt-1">
+                  <span className="font-medium text-white">Description:</span> {selectedItem.description}
                 </p>
               </div>
             )}
 
             {deleteStatus && (
-              <div className={`flex items-center p-3 rounded-md ${deleteStatus.type === 'success'
-                ? 'bg-green-50 text-green-800'
-                : 'bg-red-50 text-red-800'
+              <div className={`flex items-center p-3 rounded-xl backdrop-blur-sm ${deleteStatus.type === 'success'
+                ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                : 'bg-red-500/20 text-red-300 border border-red-500/30'
                 }`}>
                 {deleteStatus.type === 'success' ? (
                   <CheckCircle className="h-5 w-5 mr-2" />
@@ -359,7 +359,7 @@ export default function ManualPage() {
             <button
               onClick={handleDeleteEmbeddings}
               disabled={deleting || !selectedItem}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex justify-center items-center px-4 py-2.5 border-0 rounded-xl shadow-lg text-sm font-medium text-white gradient-red hover:scale-105 hover-glow-red focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-300"
             >
               {deleting ? (
                 <>
@@ -374,9 +374,9 @@ export default function ManualPage() {
               )}
             </button>
 
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-sm text-red-800">
-                <strong>Warning:</strong> This will permanently delete all embeddings for the selected item. You will need to process the manual again to recreate them. This action cannot be undone.
+            <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-sm text-red-300">
+                <strong>Warning:</strong> This will permanently delete all embeddings for the selected item. You will need to process the file again to recreate them. This action cannot be undone.
               </p>
             </div>
           </div>
