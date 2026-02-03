@@ -25,12 +25,34 @@ export const itemApi = {
   },
 
   create: async (item: CreateItemDto): Promise<CreateItemDto> => {
-    const response = await api.post<ApiResponse<CreateItemDto>>('/item', item);
+    const formData = new FormData();
+    formData.append('name', item.name);
+    formData.append('description', item.description);
+    if (item.file) {
+      formData.append('file', item.file);
+    }
+
+    const response = await api.post<ApiResponse<CreateItemDto>>('/item', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data;
   },
 
   update: async (id: number, item: CreateItemDto): Promise<Item> => {
-    const response = await api.put<ApiResponse<Item>>(`/item/${id}`, item);
+    const formData = new FormData();
+    formData.append('name', item.name);
+    formData.append('description', item.description);
+    if (item.file) {
+      formData.append('file', item.file);
+    }
+
+    const response = await api.put<ApiResponse<Item>>(`/item/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data.data;
   },
 

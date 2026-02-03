@@ -1,12 +1,11 @@
 ﻿using FluentValidation;
 using FluentValidation.AspNetCore;
-using ManualMate.Application.Interfaces.Repositories;
+using ManualMate.Application.Interfaces;
 using ManualMate.Application.Interfaces.Services;
 using ManualMate.Application.Mapping;
 using ManualMate.Application.Services;
 using ManualMate.Application.Validators;
 using ManualMate.Infrastructure.Presistence;
-using ManualMate.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
@@ -25,6 +24,7 @@ namespace ManualMate.API
                         npgsqlOptions.UseVector();
                     });
             });
+            services.AddScoped<IApplicationDbContext, ManualMateDbContext>();
 
             services.AddSingleton<IConnectionMultiplexer>(options =>
             {
@@ -41,8 +41,7 @@ namespace ManualMate.API
             services.AddScoped<IFileProcessingService, FileProcessingService>();
             services.AddScoped<ILlmService, GeminiLlmService>();
             services.AddScoped<IQaService, QaService>();
-            services.AddScoped<IItemRepository, ItemRepository>();
-            services.AddScoped<IItemFileEmbeddingRepository, ItemFileEmbeddingRepository>();
+            
             services.AddAutoMapper(typeof(MappingProfile));
 
             return services;

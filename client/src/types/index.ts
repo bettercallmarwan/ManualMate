@@ -8,7 +8,7 @@ export interface Item {
 export interface CreateItemDto {
   name: string;
   description: string;
-  filePath?: string;
+  file?: File;
 }
 
 export interface ApiResponse<T> {

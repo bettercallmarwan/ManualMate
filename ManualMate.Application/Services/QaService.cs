@@ -1,24 +1,48 @@
 ﻿using ManualMate.API.Controllers.Responses;
 using ManualMate.Application.DTOs;
-using ManualMate.Application.Interfaces.Repositories;
+using ManualMate.Application.Interfaces;
 using ManualMate.Application.Interfaces.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Pgvector.EntityFrameworkCore;
 
 namespace ManualMate.Application.Services
 {
-    public class QaService(IItemRepository itemRepository,
-        IItemFileEmbeddingRepository itemFileEmbeddingRepository,
-        IEmbeddingService embeddingService,
-        ILlmService llmService,
-        IConfiguration configuration,
-        ICacheService cache) : IQaService
+    public class QaService : IQaService
     {
-        private string context_seperator = configuration.GetSection("RAG")["context_seperator"]!;
-        private TimeSpan ttl = TimeSpan.FromHours(double.Parse(configuration.GetSection("RedisSettings")["TimeToLiveInHours"]!));
+        private readonly IApplicationDbContext _dbContext;
+        private readonly IEmbeddingService _embeddingService;
+        private readonly ILlmService _llmService;
+        private readonly IConfiguration _configuration;
+        private readonly ICacheService _cache;
+
+        private readonly string context_seperator;
+        private readonly int top_k;
+
+        private readonly TimeSpan ttl;
+
+        public QaService(
+            IApplicationDbContext dbContext,
+            IEmbeddingService embeddingService,
+            ILlmService llmService,
+            IConfiguration configuration,
+            ICacheService cache)
+        {
+            _dbContext = dbContext;
+            _embeddingService = embeddingService;
+            _llmService = llmService;
+            _configuration = configuration;
+            _cache = cache;
+
+            context_seperator = _configuration.GetSection("RAG")["context_seperator"]!;
+            top_k = int.Parse(_configuration.GetSection("RAG")["top_k"]!);
+
+            ttl = TimeSpan.FromHours(double.Parse(_configuration.GetSection("RedisSettings")["TimeToLiveInHours"]!));
+        }
 
         public async Task<Result<string>> GetAnswerAsync(int itemId, string question)
         {
-            var itemExists = await itemRepository.ItemExists(itemId);
+            var itemExists = await _dbContext.Items.AnyAsync(i => i.Id == itemId);
             if (!itemExists)
             {
                 return Result<string>.Fail($"Item with id {itemId} is not found");
@@ -27,13 +51,13 @@ namespace ManualMate.Application.Services
             string normalizedQuestion = string.Concat(question.Where(c => !char.IsWhiteSpace(c))).ToLower();
             string cacheKey = $"question:{itemId}:{normalizedQuestion}";
 
-            var cachedQuestion = await cache.GetAsync<QuestionCache>(cacheKey);
+            var cachedQuestion = await _cache.GetAsync<QuestionCache>(cacheKey);
             if(cachedQuestion is not null)
             {
                 return Result<string>.Ok(cachedQuestion.Answer);
             }
 
-            var questionEmbedding = await embeddingService.GetEmbeddingAsync(question);
+            var questionEmbedding = await _embeddingService.GetEmbeddingAsync(question);
 
             if (!questionEmbedding.Success)
             {
@@ -42,11 +66,16 @@ namespace ManualMate.Application.Services
 
             var questionVector = questionEmbedding.Value;
 
-            var topChunks = await itemFileEmbeddingRepository.GetItemTopChunks(itemId, questionVector);
+            var topChunks = await _dbContext.FileEmbeddings
+                .Where(fe => fe.ItemId == itemId)
+                .OrderBy(fe => fe.Embedding.CosineDistance(questionVector))
+                .Select(fe => fe.TextChunk)
+                .Take(top_k)
+                .ToListAsync();
 
             var context = string.Join(context_seperator, topChunks);
 
-            var answer = await llmService.GenerateAnswerAsync(context, question);
+            var answer = await _llmService.GenerateAnswerAsync(context, question);
             if (!answer.Success)
             {
                 return Result<string>.Fail(answer.Error, answer.StatusCode);
@@ -58,7 +87,7 @@ namespace ManualMate.Application.Services
                 Question = question,
                 Answer = answer.Value
             };
-            await cache.SetAsync(cacheKey, questionToCache, ttl);
+            await _cache.SetAsync(cacheKey, questionToCache, ttl);
 
             return Result<string>.Ok(answer.Value);
         }

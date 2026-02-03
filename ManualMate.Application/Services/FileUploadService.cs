@@ -1,13 +1,20 @@
 using ManualMate.API.Controllers.Responses;
-using ManualMate.Application.Interfaces.Repositories;
+using ManualMate.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace ManualMate.Application.Services
 {
-    public class FileUploadService(IItemRepository itemRepository) 
+    public class FileUploadService 
     {
+        private readonly IApplicationDbContext _dbContext;
+
+        public FileUploadService(IApplicationDbContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
         public async Task<Result<string>> UploadItemFileAsync(int itemId, IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -15,7 +22,7 @@ namespace ManualMate.Application.Services
                 return Result<string>.Fail("File Is Empty or Null", HttpStatusCode.BadRequest);
             }
 
-            var itemExists = await itemRepository.ItemExists(itemId);
+            var itemExists = await _dbContext.Items.AnyAsync(i => i.Id == itemId);
             if (!itemExists)
             {
                 return Result<string>.Fail($"Item with id : {itemId} not found", HttpStatusCode.NotFound);
@@ -42,7 +49,7 @@ namespace ManualMate.Application.Services
                     await file.CopyToAsync(stream);
                 }
 
-                var item = await itemRepository.GetAsync(itemId);
+                var item = await _dbContext.Items.FindAsync(itemId);
                 if (item == null)
                 {
                     return Result<string>.Fail($"Item with id : {itemId} not found", HttpStatusCode.NotFound);
@@ -56,7 +63,7 @@ namespace ManualMate.Application.Services
                 item.FilePath = filePath;
                 item.LastUpdated = DateTime.UtcNow;
 
-                await itemRepository.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
                 return Result<string>.Ok(item.FilePath);
             }
             catch (Exception)
@@ -65,11 +72,12 @@ namespace ManualMate.Application.Services
                 {
                     File.Delete(filePath);
                 }
-                throw;
+
+                return Result<string>.Fail($"Cannot upload file", HttpStatusCode.InternalServerError);
             }
         }
 
-        public Result<string> UploadFileAsync(IFormFile file)
+        public async Task<Result<string>> UploadFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
@@ -91,7 +99,24 @@ namespace ManualMate.Application.Services
 
             var filePath = Path.Combine(filesPath, fileName);
 
-            return Result<string>.Ok(filePath);
+            try
+            {
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                return Result<string>.Ok(filePath);
+            }
+            catch (Exception)
+            {
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                return Result<string>.Fail($"Cannot upload file", HttpStatusCode.InternalServerError);
+            }
         }
     }
 }

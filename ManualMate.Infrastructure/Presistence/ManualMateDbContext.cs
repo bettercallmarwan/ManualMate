@@ -1,16 +1,20 @@
-﻿using ManualMate.Domain.Models;
+﻿using ManualMate.Application.Interfaces;
+using ManualMate.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace ManualMate.Infrastructure.Presistence
 {
-    public class ManualMateDbContext : DbContext
+    public class ManualMateDbContext : DbContext, IApplicationDbContext
     {
-        public DbSet<Item> Items { get; set; }
-        public DbSet<FileEmbedding> FileEmbeddings { get; set; }
-        public ManualMateDbContext(DbContextOptions<ManualMateDbContext> options)
-            : base(options)
+        public ManualMateDbContext(DbContextOptions<ManualMateDbContext> options): 
+            base(options) { }
+
+        public DbSet<Item> Items => Set<Item>();
+        public DbSet<FileEmbedding> FileEmbeddings => Set<FileEmbedding>();
+
+        public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
         {
-            
+            return await base.SaveChangesAsync(ct);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

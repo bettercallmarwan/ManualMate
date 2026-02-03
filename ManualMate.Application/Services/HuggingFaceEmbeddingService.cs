@@ -26,8 +26,12 @@ namespace ManualMate.Application.Services
                     return Result<Pgvector.Vector>.Fail("Error Generating Answer.", response.StatusCode);
                 }
 
-                if(TryExtractHuggingFaceAnswer(json, out var embeddingsResponse))
+                if(TryExtractHuggingFaceAnswer(json, out Pgvector.Vector? embeddingsResponse))
                 {
+                    if(embeddingsResponse is null)
+                    {
+                        return Result<Pgvector.Vector>.Fail("Cannot generate question embeddings");
+                    }
                     return Result<Pgvector.Vector>.Ok(embeddingsResponse);
                 }
 
@@ -69,9 +73,8 @@ namespace ManualMate.Application.Services
                 result = new Pgvector.Vector(floatArray);
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Console.WriteLine($"Vector extraction failed: {ex.Message}");
                 result = null;
                 return false;
             }
@@ -94,39 +97,5 @@ namespace ManualMate.Application.Services
                 return false;
             }
         }
-
-        //public Result<float> CosineSimilarity(float[] embedding1, float[] embedding2)
-        //{
-        //    if (embedding1 == null)
-        //        return Result<float>.Fail("embedding1 cannot be null", HttpStatusCode.BadRequest);
-            
-        //    if (embedding2 == null)
-        //        return Result<float>.Fail("embedding2 cannot be null", HttpStatusCode.BadRequest);
-
-        //    if (embedding1.Length != embedding2.Length)
-        //        return Result<float>.Fail($"Embeddings must have the same length. embedding1: {embedding1.Length}, embedding2: {embedding2.Length}", HttpStatusCode.BadRequest);
-
-        //    if (embedding1.Length == 0)
-        //        return Result<float>.Fail("Embeddings cannot be empty", HttpStatusCode.BadRequest);
-
-        //    float dotProduct = 0;
-        //    float magnitude1 = 0;
-        //    float magnitude2 = 0;
-
-        //    for (int i = 0; i < embedding1.Length; i++)
-        //    {
-        //        dotProduct += embedding1[i] * embedding2[i];
-        //        magnitude1 += embedding1[i] * embedding1[i];
-        //        magnitude2 += embedding2[i] * embedding2[i];
-        //    }
-
-        //    if (magnitude1 == 0 || magnitude2 == 0)
-        //        return Result<float>.Ok(0);
-
-        //    double similarity = dotProduct / (Math.Sqrt(magnitude1) * Math.Sqrt(magnitude2));
-        //    float res = (float)Math.Max(-1.0, Math.Min(1.0, similarity));
-
-        //    return Result<float>.Ok(res);
-        //}
     }
 }

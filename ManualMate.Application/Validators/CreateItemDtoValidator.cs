@@ -14,6 +14,9 @@ namespace ManualMate.Application.Validators
             RuleFor(x => x.Description)
                 .NotEmpty().WithMessage("Item description is required")
                 .MaximumLength(600).WithMessage("Item description cannot exceed 600 characters");
+
+            RuleFor(x => x.File)
+                .NotEmpty().WithMessage("File is required");
         }
     }
 }

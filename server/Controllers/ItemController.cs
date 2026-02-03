@@ -78,11 +78,11 @@ namespace ManualMate.API.Controllers
             return this.GetResponse<string>(result);
         }
 
-        [HttpPost("create-item-and-process-file")]
-        public async Task<IActionResult> CreateItemAndProcessFile(CreateItemAndProcessFileDto dto)
-        {
-            var result = await itemService.CreateItemAndProcessFileAsync(dto);
-            return this.GetResponse<ItemResponseDto>(result);
-        }
+        //[HttpPost("create-item-and-process-file")]
+        //public async Task<IActionResult> CreateItemAndProcessFile(CreateItemAndProcessFileDto dto)
+        //{
+        //    var result = await itemService.CreateItemAndProcessFileAsync(dto);
+        //    return this.GetResponse<ItemResponseDto>(result);
+        //}
     }
 }

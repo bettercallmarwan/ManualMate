@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { itemApi } from '../services/api';
 import type { Item, CreateItemDto } from '../types';
-import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, Upload } from 'lucide-react';
 
 export default function ItemsPage() {
   const [items, setItems] = useState<Item[]>([]);
@@ -12,6 +12,7 @@ export default function ItemsPage() {
     name: '',
     description: '',
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,16 +38,29 @@ export default function ItemsPage() {
     setSubmitting(true);
     setError(null);
 
+    // Validate file is selected for create operations
+    if (!editingItem && !selectedFile) {
+      setError('Please select a file to upload');
+      setSubmitting(false);
+      return;
+    }
+
     try {
+      const itemData: CreateItemDto = {
+        ...formData,
+        file: selectedFile || undefined,
+      };
+
       if (editingItem) {
-        await itemApi.update(editingItem.id, formData);
+        await itemApi.update(editingItem.id, itemData);
       } else {
-        await itemApi.create(formData);
+        await itemApi.create(itemData);
       }
       await loadItems();
       setShowModal(false);
       setEditingItem(null);
       setFormData({ name: '', description: '' });
+      setSelectedFile(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save item');
     } finally {
@@ -77,6 +91,7 @@ export default function ItemsPage() {
   const openCreateModal = () => {
     setEditingItem(null);
     setFormData({ name: '', description: '' });
+    setSelectedFile(null);
     setShowModal(true);
   };
 
@@ -181,6 +196,34 @@ export default function ItemsPage() {
                         className="mt-1 block w-full bg-slate-800/50 border border-slate-600 rounded-lg shadow-sm py-2 px-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                       />
                     </div>
+                    <div>
+                      <label htmlFor="file" className="block text-sm font-medium text-gray-300">
+                        File {!editingItem && <span className="text-red-400">*</span>}
+                      </label>
+                      <div className="mt-1">
+                        <label
+                          htmlFor="file"
+                          className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer bg-slate-800/50 hover:bg-slate-700/50 hover:border-purple-500 transition-all duration-300"
+                        >
+                          <Upload className="h-5 w-5 text-gray-400 mr-2" />
+                          <span className="text-sm text-gray-300">
+                            {selectedFile ? selectedFile.name : editingItem ? 'Upload new file (optional)' : 'Choose a PDF file'}
+                          </span>
+                        </label>
+                        <input
+                          type="file"
+                          id="file"
+                          accept=".pdf,application/pdf"
+                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                          className="hidden"
+                        />
+                        {selectedFile && (
+                          <p className="mt-2 text-xs text-purple-400">
+                            Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="bg-[#2a2b32] px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-white/10">
@@ -201,6 +244,7 @@ export default function ItemsPage() {
                       setShowModal(false);
                       setEditingItem(null);
                       setFormData({ name: '', description: '' });
+                      setSelectedFile(null);
                     }}
                     className="mt-3 w-full inline-flex justify-center rounded-xl border-2 border-slate-600 shadow-sm px-4 py-2 bg-slate-800/50 text-base font-medium text-gray-300 hover:bg-slate-700/50 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all duration-300"
                   >
