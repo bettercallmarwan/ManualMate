@@ -1,5 +1,6 @@
 ﻿using ManualMate.Application.Interfaces;
 using ManualMate.Domain.Models;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace ManualMate.Infrastructure.Presistence
@@ -20,6 +21,8 @@ namespace ManualMate.Infrastructure.Presistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            
+            modelBuilder.AddTransactionalOutboxEntities();
 
             modelBuilder.HasPostgresExtension("vector");
 

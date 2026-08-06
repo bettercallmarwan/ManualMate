@@ -1,13 +1,16 @@
-using ManualMate.API.Controllers.Responses;
-using ManualMate.Infrastructure.Presistence;
-using Microsoft.AspNetCore.Mvc;
-using Serilog;
-using System.Text.Json.Serialization;
-using Serilog.Events;
 using System.Net.Http.Headers;
+using System.Text.Json.Serialization;
+using ManualMate.API;
+using ManualMate.Application.Responses;
+using ManualMate.Infrastructure.Consumers;
+using ManualMate.Infrastructure.Presistence;
+using MassTransit;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 
-namespace ManualMate.API
+namespace ManualMate
 {
     public class Program
     {
@@ -47,22 +50,23 @@ namespace ManualMate.API
 
             builder.Services.AddServices(builder.Configuration);// extension
 
+
             builder.Services.AddHttpClient("GeminiClient", client =>
             {
-                string MODEL_URL = builder.Configuration["Gemini:ModelUrl"]!;
-                string API_TOKEN = builder.Configuration["Gemini:GeminiToken"]!;
+                string modelUrl = builder.Configuration["Gemini:ModelUrl"]!;
+                string apiToken = builder.Configuration["Gemini:GeminiToken"]!;
 
-                client.BaseAddress = new Uri($"{MODEL_URL}{API_TOKEN}");
+                client.BaseAddress = new Uri($"{modelUrl}{apiToken}");
             });
 
             builder.Services.AddHttpClient("HuggingFaceClient", client =>
             {
-                string MODEL_URL = builder.Configuration["HuggingFace:ModelUrl"]!;
-                string API_TOKEN = builder.Configuration["HuggingFace:ApiToken"]!;
+                string modelUrl = builder.Configuration["HuggingFace:ModelUrl"]!;
+                string apiToken = builder.Configuration["HuggingFace:ApiToken"]!;
 
-                client.BaseAddress = new Uri(MODEL_URL);
+                client.BaseAddress = new Uri(modelUrl);
                 client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", API_TOKEN);
+                    new AuthenticationHeaderValue("Bearer", apiToken);
             });
 
             builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -91,7 +95,7 @@ namespace ManualMate.API
             {
                 var context = scope.ServiceProvider.GetRequiredService<ManualMateDbContext>();
                 context.Database.Migrate();
-                await DbInitializer.seedAsync(context);
+                await DbInitializer.SeedAsync(context);
             }
 
             app.UseHttpsRedirection();

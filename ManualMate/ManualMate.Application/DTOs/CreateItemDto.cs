@@ -2,7 +2,7 @@
 
 namespace ManualMate.Application.DTOs
 {
-    public class CreateItemDto
+    public record CreateItemDto
     {
         public string Name { get; set; }
         public string Description { get; set; }

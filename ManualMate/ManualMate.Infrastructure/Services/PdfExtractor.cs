@@ -1,13 +1,14 @@
-﻿using ManualMate.API.Controllers.Responses;
-using System.Net;
+﻿using System.Net;
 using System.Text;
+using ManualMate.Application.Interfaces.Services;
+using ManualMate.Application.Responses;
 using UglyToad.PdfPig;
 
-namespace ManualMate.Application.Services
+namespace ManualMate.Infrastructure.Services
 {
-    public static class PdfExtractor
+    public class PdfTextExtractor : IPdfTextExtractor
     {
-        public static Result<string> ExtractTextFromPdf(string path)
+        public Result<string> ExtractTextFromPdf(string path)
         {
             try
             {

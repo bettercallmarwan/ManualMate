@@ -3,7 +3,7 @@
 namespace ManualMate.Application.DTOs
 {
     [Serializable]
-    public class GeminiResponse
+    public record GeminiResponse
     {
         [JsonProperty("text")]
         public string text { get; set; }

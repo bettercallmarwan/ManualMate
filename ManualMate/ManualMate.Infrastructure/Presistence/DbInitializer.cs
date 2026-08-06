@@ -6,7 +6,7 @@ namespace ManualMate.Infrastructure.Presistence
     {
         // 1) add files with the same name to wwwroot/Files
         // 2) process uploaded file
-        public static async Task seedAsync(ManualMateDbContext context)
+        public static async Task SeedAsync(ManualMateDbContext context)
         {
             if (!context.Items.Any())
             {

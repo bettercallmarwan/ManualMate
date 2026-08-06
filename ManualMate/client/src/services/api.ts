@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Item, CreateItemDto, ApiResponse, ApiError } from '../types';
+import type { Item, CreateItemDto, ApiResponse } from '../types';
 
 // Use proxy in development, or full URL in production
 // In development, always use the proxy to avoid CORS issues
@@ -19,7 +19,7 @@ export const itemApi = {
     return response.data.data;
   },
 
-  getById: async (id: number): Promise<Item> => {
+  getById: async (id: string): Promise<Item> => {
     const response = await api.get<ApiResponse<Item>>(`/item/${id}`);
     return response.data.data;
   },
@@ -40,7 +40,7 @@ export const itemApi = {
     return response.data.data;
   },
 
-  update: async (id: number, item: CreateItemDto): Promise<Item> => {
+  update: async (id: string, item: CreateItemDto): Promise<Item> => {
     const formData = new FormData();
     formData.append('name', item.name);
     formData.append('description', item.description);
@@ -56,43 +56,18 @@ export const itemApi = {
     return response.data.data;
   },
 
-  delete: async (id: number): Promise<boolean> => {
+  delete: async (id: string): Promise<boolean> => {
     const response = await api.delete<ApiResponse<boolean>>(`/item/${id}`);
     return response.data.data;
   },
 
-  uploadFile: async (id: number, file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await api.post<ApiResponse<string>>(
-      `/item/upload-file/${id}`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-    return response.data.data;
-  },
-
-  processFile: async (id: number): Promise<boolean> => {
-    const response = await api.get<ApiResponse<boolean>>(`/item/process-file/${id}`);
-    return response.data.data;
-  },
-
-  ask: async (itemId: number, question: string): Promise<string> => {
+  ask: async (itemId: string, question: string): Promise<string> => {
     const response = await api.get<ApiResponse<string>>(
       `/item/ask/${itemId}`,
       {
         params: { question },
       }
     );
-    return response.data.data;
-  },
-
-  deleteEmbeddings: async (id: number): Promise<boolean> => {
-    const response = await api.delete<ApiResponse<boolean>>(`/item/embeddings/${id}`);
     return response.data.data;
   },
 };

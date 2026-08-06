@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -16,11 +16,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.12">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MassTransit.Abstractions">
+      <HintPath>..\..\..\..\.nuget\packages\masstransit.abstractions\8.3.3\lib\net9.0\MassTransit.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="MassTransit.EntityFrameworkCoreIntegration">
+      <HintPath>..\..\..\..\.nuget\packages\masstransit.entityframeworkcore\8.3.3\lib\net9.0\MassTransit.EntityFrameworkCoreIntegration.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

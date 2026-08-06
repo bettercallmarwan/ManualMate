@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace ManualMate.API.Controllers.Responses
+namespace ManualMate.Application.Responses
 {
     public class Result<T>
     {

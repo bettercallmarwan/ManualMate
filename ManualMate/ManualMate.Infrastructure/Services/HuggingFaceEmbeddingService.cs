@@ -1,10 +1,10 @@
-﻿using ManualMate.API.Controllers.Responses;
-using ManualMate.Application.Interfaces.Services;
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using ManualMate.Application.Interfaces.Services;
+using ManualMate.Application.Responses;
 
-namespace ManualMate.Application.Services
+namespace ManualMate.Infrastructure.Services
 {
     public class HuggingFaceEmbeddingService(IHttpClientFactory clientFactory) : IEmbeddingService
     {
@@ -14,7 +14,7 @@ namespace ManualMate.Application.Services
             {
                 var response = await GetHuggingFaceResponse(text);
 
-                string json = await response.Content.ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {

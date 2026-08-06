@@ -1,11 +1,10 @@
-﻿using ManualMate.API.Controllers.Responses;
-using ManualMate.Application.Interfaces.Services;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using ManualMate.Application.Interfaces.Services;
+using ManualMate.Application.Responses;
 
-namespace ManualMate.Application.Services
+namespace ManualMate.Infrastructure.Services
 {
     public class GeminiLlmService(IHttpClientFactory clientFactory) : ILlmService
     {
@@ -14,10 +13,8 @@ namespace ManualMate.Application.Services
             try
             {
                 var prompt = GeneratePrompt(context, question);
-
                 var response = await GetGeminiResponse(prompt);
-
-                string json = await response.Content.ReadAsStringAsync();
+                var json = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -29,7 +26,7 @@ namespace ManualMate.Application.Services
                     return Result<string>.Fail("Error Generating Answer.", response.StatusCode);
                 }
 
-                if (TryExtractGeminiAnswer(json, out string textResponse))
+                if (TryExtractGeminiAnswer(json, out var textResponse))
                 {
                     return Result<string>.Ok(textResponse);
                 }

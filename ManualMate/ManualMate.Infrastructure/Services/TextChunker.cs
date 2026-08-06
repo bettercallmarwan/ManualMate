@@ -1,12 +1,13 @@
-﻿using ManualMate.API.Controllers.Responses;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
+using ManualMate.Application.Interfaces.Services;
+using ManualMate.Application.Responses;
 
-namespace ManualMate.Application.Services
+namespace ManualMate.Infrastructure.Services
 {
-    public static class TextChunker
+    public class TextChunker : ITextChunker
     {
-        public static Result<List<string>> ChunkText(string text, int maxChars = 500)
+        public Result<List<string>> ChunkText(string text, int maxChars = 500)
         {
             try
             {
@@ -31,10 +32,9 @@ namespace ManualMate.Application.Services
 
                 return Result<List<string>>.Ok(chunks);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
-            }
+                return Result<List<string>>.Fail("Error chunking text: " + ex.Message);            }
         }
     }
 }

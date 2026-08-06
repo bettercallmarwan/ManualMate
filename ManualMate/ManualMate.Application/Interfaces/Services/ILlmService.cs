@@ -1,4 +1,4 @@
-﻿using ManualMate.API.Controllers.Responses;
+﻿using ManualMate.Application.Responses;
 
 namespace ManualMate.Application.Interfaces.Services
 {

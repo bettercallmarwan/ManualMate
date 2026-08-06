@@ -102,7 +102,7 @@ export default function QAPage() {
             <select
               value={selectedItem?.id || ''}
               onChange={(e) => {
-                const item = items.find(p => p.id === parseInt(e.target.value));
+                const item = items.find(p => p.id === e.target.value);
                 setSelectedItem(item || null);
                 setMessages([]);
                 setError(null);

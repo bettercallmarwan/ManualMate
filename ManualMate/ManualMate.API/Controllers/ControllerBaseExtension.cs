@@ -1,6 +1,6 @@
-﻿using ManualMate.API.Controllers.Responses;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using ManualMate.Application.Responses;
 
 namespace ManualMate.API.Controllers
 {

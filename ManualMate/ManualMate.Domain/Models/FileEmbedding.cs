@@ -3,7 +3,7 @@
     public class FileEmbedding
     {
         public int Id { get; set; }
-        public int ItemId { get; set; }
+        public Guid ItemId { get; set; }
         public Item item { get; set; }
 
         public string TextChunk { get; set; }
