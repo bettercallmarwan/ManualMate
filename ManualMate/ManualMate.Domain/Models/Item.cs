@@ -4,7 +4,7 @@ namespace ManualMate.Domain.Models
 {
     public class Item
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; } = Guid.NewGuid();
         public string Name { get; set; }
         public string Description { get; set; }
         public string FilePath { get; set; }

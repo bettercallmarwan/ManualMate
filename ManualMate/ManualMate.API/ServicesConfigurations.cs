@@ -1,3 +1,5 @@
+using System.Net;
+using System.Reflection.Metadata;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using ManualMate.Application.Interfaces;
@@ -71,8 +73,14 @@ namespace ManualMate
                         h.Password(conf["RabbitMQ:Password"]!);
                     });
 
-                    cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
-
+                    cfg.UseMessageRetry(r =>
+                    {
+                        r.Handle<TimeoutException>();
+                        r.Handle<HttpRequestException>(e => e.StatusCode is null or >= HttpStatusCode.InternalServerError);        
+                        r.Ignore<HttpRequestException>(e => e.StatusCode < HttpStatusCode.BadRequest);
+                        r.Interval(3, TimeSpan.FromSeconds(5));
+                    });
+                    
                     cfg.ConfigureEndpoints(context);
                 });
             });
