@@ -1,0 +1,12 @@
+.git
+.gitignore
+.vs
+.idea
+.vscode
+**/*.user
+**/bin/
+**/obj/
+**/logs/
+client/node_modules/
+client/dist/
+*.md

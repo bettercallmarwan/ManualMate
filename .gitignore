@@ -121,3 +121,29 @@ Thumbs.db
 # BFG Cleaner
 bfg-*.jar
 bfg-*
+
+
+# 1. Environment files with real secrets (API keys & passwords)
+.env
+.env.local
+.env.development
+.env.production
+
+# 2. Local App settings with credentials
+appsettings.json
+appsettings.Development.json
+!appsettings.Example.json
+
+# 3. Dependencies & Build outputs
+node_modules/
+dist/
+bin/
+obj/
+logs/
+
+# 4. Uploaded PDF Manuals & OS files
+*.pdf
+.DS_Store
+.vs/
+.idea/
+
